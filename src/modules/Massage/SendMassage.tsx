@@ -17,7 +17,6 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  // tRPC mutation to save the anonymous message to your database
   const sendMessage = trpc.message.send.useMutation({
     onSuccess: () => {
       setSubmitted(true);
@@ -43,8 +42,7 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
       "what's a secret you've never told anyone?",
       "if we went on a date, where would we go?"
     ];
-    const random = prompts[Math.floor(Math.random() * prompts.length)];
-    setMessage(random);
+    setMessage(prompts[Math.floor(Math.random() * prompts.length)]);
   };
 
   const getBackgroundGradient = (color?: string) => {
@@ -63,10 +61,10 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
       "relative flex min-h-screen flex-col items-center justify-between bg-gradient-to-b p-6 text-white overflow-x-hidden",
       getBackgroundGradient(favoriteColor)
     )}>
-      <div className="w-full max-w-sm flex flex-col items-center flex-1 justify-center my-auto gap-5">
+      <div className="w-full max-w-sm flex flex-col items-center flex-1 justify-center my-auto gap-4">
         
         {submitted ? (
-          <div className="w-full rounded-3xl bg-black/40 p-8 text-center backdrop-blur-md border border-white/20 shadow-2xl flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
+          <div className="w-full rounded-3xl bg-black/40 p-8 text-center backdrop-blur-md border border-white/20 shadow-2xl flex flex-col items-center gap-4">
             <CheckCircle2 size={60} className="text-green-400" />
             <h2 className="text-2xl font-black tracking-tight">Message Sent!</h2>
             <p className="text-sm text-zinc-300">Your anonymous message was successfully delivered to @{username}.</p>
@@ -79,10 +77,10 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
           </div>
         ) : (
           <form onSubmit={handleSend} className="w-full flex flex-col gap-4">
-            {/* Card Container matching your reference photo */}
+            {/* Main Card */}
             <div className="relative flex flex-col rounded-3xl bg-white text-black shadow-2xl overflow-hidden border border-white/40">
               
-              {/* Top User Bar */}
+              {/* User Header */}
               <div className="flex items-center gap-3 p-4 border-b border-zinc-100 bg-white">
                 <div className="h-10 w-10 overflow-hidden rounded-full bg-zinc-900 text-white flex items-center justify-center font-bold text-lg shadow-sm">
                   {username[0].toUpperCase()}
@@ -93,7 +91,7 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
                 </div>
               </div>
 
-              {/* Textarea Area with Dynamic Gradient Background */}
+              {/* Text Input Area */}
               <div className={cn(
                 "relative p-5 bg-gradient-to-b flex flex-col justify-between min-h-[180px]",
                 getBackgroundGradient(favoriteColor)
@@ -101,18 +99,17 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
                 <Textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="say something nice or ask a question..."
+                  placeholder="are u single?"
                   maxLength={500}
                   className="w-full bg-transparent border-none text-white placeholder:text-white/70 text-lg font-medium resize-none focus-visible:ring-0 shadow-none p-0 min-h-[110px]"
                 />
 
-                {/* Random prompt button inside card */}
+                {/* Dice Button */}
                 <div className="flex justify-end pt-2">
                   <button
                     type="button"
                     onClick={getRandomPrompt}
                     className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 transition-transform active:scale-95 shadow-sm"
-                    title="Get a prompt idea"
                   >
                     <Dices size={18} />
                   </button>
@@ -120,7 +117,7 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
               </div>
             </div>
 
-            {/* Privacy note */}
+            {/* Privacy Lock text */}
             <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-white/90 drop-shadow-sm my-1">
               <Lock size={13} className="text-amber-300 fill-amber-300" />
               <span>anonymous q&a</span>
@@ -137,7 +134,7 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
           </form>
         )}
 
-        {/* Footer CTA: Get your own messages */}
+        {/* Bottom CTA to get their own link */}
         <div className="w-full flex flex-col items-center gap-2 mt-4">
           <span className="text-xs font-extrabold text-amber-300 drop-shadow-md">
             👇 249 friends just tapped the button 👇
@@ -151,7 +148,6 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
 
       </div>
 
-      {/* Footer Links */}
       <footer className="flex gap-4 text-xs font-bold text-white/80 pb-2">
         <Link href="/terms" className="hover:underline">Terms</Link>
         <span>•</span>

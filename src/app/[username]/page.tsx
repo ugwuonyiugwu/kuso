@@ -8,18 +8,19 @@ interface PageProps {
   params: Promise<{ username: string }>;
 }
 
-export default async function PublicProfilePage({ params }: PageProps) {
+export default async function UserProfilePage({ params }: PageProps) {
   const { username } = await params;
 
-  // Fetch the target user directly on the server to check if they exist
+  // Search the database for the user whose link was visited
   const [targetUser] = await db
     .select()
     .from(users)
     .where(eq(users.username, username))
     .limit(1);
 
+  // If the user doesn't exist in the database, show the 404 page
   if (!targetUser) {
-    return notFound();
+    notFound();
   }
 
   return (
