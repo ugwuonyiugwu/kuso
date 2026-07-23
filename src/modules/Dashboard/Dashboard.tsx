@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, Check, Settings, Sparkles, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trpc } from '@/trpc/client';
+import Link from 'next/link';
 
 interface DashboardClientProps {
   username: string;
@@ -43,9 +44,12 @@ export function DashboardClient({ username }: DashboardClientProps) {
           <span className="text-xl font-black tracking-wider text-white underline decoration-white decoration-2 underline-offset-8">
             play
           </span>
-          <span className="text-xl font-bold text-zinc-500 cursor-pointer hover:text-zinc-300">
+          <Link 
+            href={`/${username}/inbox`} 
+            className="text-xl font-bold text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors"
+          >
             inbox
-          </span>
+          </Link>
         </div>
         <button className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors">
           <Settings size={22} />

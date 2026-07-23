@@ -9,8 +9,9 @@ export const users = pgTable("users", {
 
 export const messages = pgTable("messages", {
   id: uuid("id").defaultRandom().primaryKey(),
-  // Change 'text' to 'integer' (or serial) if your users.id is a number:
+  slug: text("slug").unique().notNull(),
   userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-  content: text("content").notNull(),
+  promptContent: text("prompt_content").notNull(),
+  replyContent: text("reply_content"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

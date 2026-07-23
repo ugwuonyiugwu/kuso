@@ -61,7 +61,7 @@ export function InboxClient({ username }: InboxClientProps) {
                 key={msg.id} 
                 className="flex flex-col gap-2 rounded-2xl bg-[#2d3748]/60 p-4 border border-white/10 shadow-md backdrop-blur-sm transition-all hover:bg-[#2d3748]"
               >
-                <p className="text-base font-medium text-zinc-100 break-words">{msg.content}</p>
+                <p className="text-base font-medium text-zinc-100 break-words">{msg.promptContent}</p>
                 <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs text-zinc-400">
                   <span className="flex items-center gap-1">
                     <Calendar size={12} />

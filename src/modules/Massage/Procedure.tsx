@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { users, messages } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { nanoid } from "nanoid";
 
 export const messageRouter = createTRPCRouter({
   send: publicProcedure
@@ -27,15 +28,48 @@ export const messageRouter = createTRPCRouter({
         });
       }
 
+      const uniqueSlug = nanoid(10);
+
       const [newMessage] = await db
         .insert(messages)
         .values({
+          slug: uniqueSlug,
           userId: targetUser.id,
-          content: input.content,
+          promptContent: input.content,
         })
         .returning();
 
-      return { success: true, messageId: newMessage.id };
+      return { success: true, messageId: newMessage.id, slug: newMessage.slug };
+    }),
+
+  replyToPrompt: publicProcedure
+    .input(
+      z.object({
+        slug: z.string(),
+        replyContent: z.string().min(1, "Reply cannot be empty").max(500, "Reply is too long"),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const [targetMessage] = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.slug, input.slug))
+        .limit(1);
+
+      if (!targetMessage) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Message link not found",
+        });
+      }
+
+      const [updatedMessage] = await db
+        .update(messages)
+        .set({ replyContent: input.replyContent })
+        .where(eq(messages.slug, input.slug))
+        .returning();
+
+      return { success: true, messageId: updatedMessage.id };
     }),
 
   getInbox: publicProcedure
