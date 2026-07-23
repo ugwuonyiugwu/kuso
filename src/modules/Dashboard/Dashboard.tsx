@@ -13,7 +13,11 @@ interface DashboardClientProps {
 
 export function DashboardClient({ username }: DashboardClientProps) {
   const [copied, setCopied] = useState(false);
-  const profileLink = `kuso.link/${username}`;
+
+  // Use the actual current window origin (your live Vercel domain) automatically!
+  const profileLink = typeof window !== 'undefined' 
+    ? `${window.location.origin}/${username}` 
+    : `/${username}`;
 
   // Uses suspense query which automatically hooks into the server prefetch
   const [user] = trpc.user.getUserByUsername.useSuspenseQuery({ username });
@@ -78,7 +82,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
 
         <div className="flex flex-col items-center justify-center rounded-3xl bg-[#2d3748]/80 p-5 border border-white/10 shadow-lg flex-1">
           <span className="text-sm font-semibold text-zinc-400 mb-1">Step 1: Copy your link</span>
-          <span className="text-sm font-bold tracking-wide text-zinc-200 mb-3 uppercase">{profileLink}</span>
+          <span className="text-xs font-bold tracking-wide text-zinc-200 mb-3 break-all text-center">{profileLink}</span>
           
           <Button 
             onClick={handleCopy}
@@ -105,7 +109,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
           <Button 
             onClick={() => {
               if (navigator.share) {
-                navigator.share({ title: 'KUSO', text: 'Send me anonymous messages!', url: `https://${profileLink}` });
+                navigator.share({ title: 'KUSO', text: 'Send me anonymous messages!', url: profileLink });
               } else {
                 handleCopy();
               }
