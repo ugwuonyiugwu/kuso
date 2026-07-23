@@ -79,7 +79,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
           <Button 
             onClick={handleCopy}
             className={cn(
-              "h-12 w-full rounded-full bg-gradient-to-r text-base font-bold text-white shadow-md transition-transform active:scale-95",
+              "h-12 w-full rounded-full bg-linear-to-r text-base font-bold text-white shadow-md transition-transform active:scale-95",
               getColorGlowStyles(user?.favoriteColor)
             )}
           >
@@ -107,7 +107,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
               }
             }}
             className={cn(
-              "h-12 w-full rounded-full bg-gradient-to-r text-base font-extrabold text-white shadow-lg transition-transform active:scale-95 hover:opacity-90",
+              "h-12 w-full rounded-full bg-linear-to-r text-base font-extrabold text-white shadow-lg transition-transform active:scale-95 hover:opacity-90",
               getColorGlowStyles(user?.favoriteColor)
             )}
           >
