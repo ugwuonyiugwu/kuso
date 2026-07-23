@@ -2,7 +2,7 @@ import { z } from "zod";
 import { baseProcedure as publicProcedure, createTRPCRouter } from "@/trpc/init";
 import { db } from "@/db";
 import { users, messages } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const messageRouter = createTRPCRouter({
@@ -36,5 +36,34 @@ export const messageRouter = createTRPCRouter({
         .returning();
 
       return { success: true, messageId: newMessage.id };
+    }),
+
+  getInbox: publicProcedure
+    .input(
+      z.object({
+        username: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      const [targetUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.username, input.username))
+        .limit(1);
+
+      if (!targetUser) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
+
+      const userMessages = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.userId, targetUser.id))
+        .orderBy(desc(messages.createdAt));
+
+      return userMessages;
     }),
 });
