@@ -21,9 +21,12 @@ export function InboxClient({ username }: InboxClientProps) {
           <Link href={`/${username}`} className="text-xl font-bold text-zinc-500 hover:text-zinc-300">
             play
           </Link>
-          <span className="text-xl font-black tracking-wider text-white underline decoration-white decoration-2 underline-offset-8">
+          <Link 
+            href={`/inbox/${username}`} 
+            className="text-xl font-bold text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors"
+          >
             inbox
-          </span>
+          </Link>
         </div>
         <Link href={`/${username}`}>
           <button className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors">

@@ -7,6 +7,7 @@ import { Lock, Dices, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trpc } from '@/trpc/client';
 import Link from 'next/link';
+import { toast } from "sonner"; // Import sonner toast
 
 interface SendMessageClientProps {
   username: string;
@@ -17,18 +18,23 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const sendMessage = trpc.message.send.useMutation({
+  // Correct tRPC mutation setup
+  const { mutate: sendMessage, isPending } = trpc.message.send.useMutation({
     onSuccess: () => {
       setSubmitted(true);
       setMessage('');
+      toast.success("Anonymous message sent successfully!");
     },
+    onError: (error) => {
+      toast.error(error.message || "Failed to send message. Try again!");
+    }
   });
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
     
-    sendMessage.mutate({
+    sendMessage({
       recipientUsername: username,
       content: message,
     });
@@ -126,10 +132,10 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
             {/* Send Button */}
             <Button
               type="submit"
-              disabled={!message.trim() || sendMessage.isPending}
+              disabled={!message.trim() || isPending}
               className="h-14 w-full rounded-full bg-black text-white text-lg font-black tracking-wide shadow-xl hover:bg-zinc-900 transition-transform active:scale-95 disabled:opacity-50"
             >
-              {sendMessage.isPending ? "Sending..." : "Send!"}
+              {isPending ? "Sending..." : "Send!"}
             </Button>
           </form>
         )}
