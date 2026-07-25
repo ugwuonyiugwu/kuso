@@ -100,4 +100,37 @@ export const messageRouter = createTRPCRouter({
 
       return userMessages;
     }),
+
+  // 👉 Newly added query to fetch a single message by slug and include user's favorite color
+  getMessageBySlug: publicProcedure
+    .input(
+      z.object({
+        slug: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      const [message] = await db
+        .select({
+          id: messages.id,
+          slug: messages.slug,
+          promptContent: messages.promptContent,
+          replyContent: messages.replyContent,
+          createdAt: messages.createdAt,
+          username: users.username,
+          favoriteColor: users.favoriteColor,
+        })
+        .from(messages)
+        .innerJoin(users, eq(messages.userId, users.id))
+        .where(eq(messages.slug, input.slug))
+        .limit(1);
+
+      if (!message) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Message not found",
+        });
+      }
+
+      return message;
+    }),
 });

@@ -64,7 +64,7 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
 
   return (
     <main className={cn(
-      "relative flex min-h-screen flex-col items-center justify-between bg-gradient-to-b p-6 text-white overflow-x-hidden",
+      "relative flex min-h-screen flex-col items-center justify-between bg-linear-to-b p-6 text-white overflow-x-hidden",
       getBackgroundGradient(favoriteColor)
     )}>
       <div className="w-full max-w-sm flex flex-col items-center flex-1 justify-center my-auto gap-4">
@@ -99,7 +99,7 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
 
               {/* Text Input Area */}
               <div className={cn(
-                "relative p-5 bg-gradient-to-b flex flex-col justify-between min-h-[180px]",
+                "relative p-5 bg-linear-to-b flex flex-col justify-between min-h-45",
                 getBackgroundGradient(favoriteColor)
               )}>
                 <Textarea
@@ -107,7 +107,7 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="are u single?"
                   maxLength={500}
-                  className="w-full bg-transparent border-none text-white placeholder:text-white/70 text-lg font-medium resize-none focus-visible:ring-0 shadow-none p-0 min-h-[110px]"
+                  className="w-full bg-transparent border-none text-white placeholder:text-white/70 text-lg font-medium resize-none focus-visible:ring-0 shadow-none p-0 min-h-27.5"
                 />
 
                 {/* Dice Button */}
@@ -145,7 +145,7 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
           <span className="text-xs font-extrabold text-amber-300 drop-shadow-md">
             👇 249 friends just tapped the button 👇
           </span>
-          <Link href="/register" className="w-full">
+          <Link href="/" className="w-full">
             <Button className="h-14 w-full rounded-full bg-black text-white text-base font-extrabold shadow-xl hover:bg-zinc-900 transition-transform active:scale-95">
               Get your own messages!
             </Button>

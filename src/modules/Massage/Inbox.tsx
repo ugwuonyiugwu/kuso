@@ -60,26 +60,31 @@ export function InboxClient({ username }: InboxClientProps) {
         ) : userMessages && userMessages.length > 0 ? (
           <div className="flex flex-col gap-3">
             {userMessages.map((msg) => (
-              <div 
-                key={msg.id} 
-                className="flex flex-col gap-2 rounded-2xl bg-[#2d3748]/60 p-4 border border-white/10 shadow-md backdrop-blur-sm transition-all hover:bg-[#2d3748]"
-              >
-                <p className="text-base font-medium text-zinc-100 break-words">{msg.promptContent}</p>
-                <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs text-zinc-400">
-                  <span className="flex items-center gap-1">
-                    <Calendar size={12} />
-                    {new Date(msg.createdAt).toLocaleDateString(undefined, { 
-                      month: 'short', 
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                  <span className="flex items-center gap-1 text-pink-400 font-semibold">
-                    <Sparkles size={12} /> Anonymous
-                  </span>
+              <Link key={msg.id} href={`/${username}/inbox/${msg.slug}`} className="block">
+                <div 
+                  className="flex flex-col gap-2 rounded-2xl bg-[#2d3748]/60 p-4 border border-white/10 shadow-md backdrop-blur-sm transition-all hover:bg-[#2d3748] cursor-pointer"
+                >
+                  {/* Truncated message to 2 lines with text ellipsis */}
+                  <p className="text-base font-medium text-zinc-100 wrap-break-words line-clamp-2 overflow-hidden text-ellipsis">
+                    {msg.promptContent}
+                  </p>
+                  
+                  <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <Calendar size={12} />
+                      {new Date(msg.createdAt).toLocaleDateString(undefined, { 
+                        month: 'short', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                    <span className="flex items-center gap-1 text-pink-400 font-semibold">
+                      <Sparkles size={12} /> Anonymous
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
