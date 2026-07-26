@@ -2,9 +2,8 @@
 
 import React from 'react';
 import { trpc } from '@/trpc/client';
-import { MessageSquare, ArrowLeft, Calendar, Sparkles } from 'lucide-react';
+import { MessageSquare, Menu, Calendar, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 
 interface InboxClientProps {
   username: string;
@@ -16,28 +15,29 @@ export function InboxClient({ username }: InboxClientProps) {
   return (
     <main className="relative flex min-h-screen flex-col items-center bg-[#1a202c] p-6 text-white">
       {/* Header */}
-      <header className="flex w-full max-w-sm items-center justify-between pt-2 pb-6">
+      <header className="flex w-full max-w-sm items-center justify-between pt-2 pb-6 mb-15 my-5">
         <div className="flex gap-4">
-          <Link href={`/${username}`} className="text-xl font-bold text-zinc-500 hover:text-zinc-300">
+          <Link 
+            href={`/dashboard/${username}`} 
+            className="text-xl font-bold text-zinc-500 hover:text-zinc-300 transition-colors"
+          >
             play
           </Link>
           <Link 
-            href={`/inbox/${username}`} 
-            className="text-xl font-bold text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors"
+            href={`/${username}/inbox`} 
+            className="text-xl font-black tracking-wider text-white underline decoration-white decoration-2 underline-offset-8"
           >
             inbox
           </Link>
         </div>
-        <Link href={`/${username}`}>
-          <button className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors">
-            <ArrowLeft size={20} />
-          </button>
-        </Link>
+        <button className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors">
+          <Menu size={22} />
+        </button>
       </header>
 
       {/* Content Container */}
       <div className="flex w-full max-w-sm flex-1 flex-col gap-4 pb-8">
-        <div className="flex items-center justify-between rounded-2xl bg-[#2d3748]/80 p-4 border border-white/10 shadow-lg">
+        <div className="flex items-center justify-between rounded-sm bg-[#2d3748]/80 p-4 border border-white/10 shadow-lg">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-500/20 text-pink-400">
               <MessageSquare size={20} />
@@ -62,7 +62,7 @@ export function InboxClient({ username }: InboxClientProps) {
             {userMessages.map((msg) => (
               <Link key={msg.id} href={`/${username}/inbox/${msg.slug}`} className="block">
                 <div 
-                  className="flex flex-col gap-2 rounded-2xl bg-[#2d3748]/60 p-4 border border-white/10 shadow-md backdrop-blur-sm transition-all hover:bg-[#2d3748] cursor-pointer"
+                  className="flex flex-col gap-2 rounded-sm bg-[#2d3748]/60 p-4 border border-white/10 shadow-md backdrop-blur-sm transition-all hover:bg-[#2d3748] cursor-pointer"
                 >
                   {/* Truncated message to 2 lines with text ellipsis */}
                   <p className="text-base font-medium text-zinc-100 wrap-break-words line-clamp-2 overflow-hidden text-ellipsis">

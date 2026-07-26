@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Settings, Sparkles, Share2 } from "lucide-react";
+import { Copy, Check, Menu, Sparkles, Share2, Gift, Calendar, PartyPopper, Settings, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trpc } from '@/trpc/client';
 import Link from 'next/link';
@@ -13,13 +13,31 @@ interface DashboardClientProps {
 
 export function DashboardClient({ username }: DashboardClientProps) {
   const [copied, setCopied] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [profileLink, setProfileLink] = useState(`/${username}`);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  // Use the actual current window origin (your live Vercel domain) automatically!
-  const profileLink = typeof window !== 'undefined' 
-    ? `${window.location.origin}/${username}` 
-    : `/${username}`;
+  // Set the full window origin safely on client mount to prevent hydration mismatch
+  useEffect(() => {
+    setProfileLink(`${window.location.origin}/${username}`);
+  }, [username]);
 
-  // Uses suspense query which automatically hooks into the server prefetch
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
+  // Uses suspense query which automatically hooks into the server prefetch and retrieves the user data (including role)
   const [user] = trpc.user.getUserByUsername.useSuspenseQuery({ username });
 
   const handleCopy = () => {
@@ -43,21 +61,83 @@ export function DashboardClient({ username }: DashboardClientProps) {
 
   return (
     <main className="relative flex min-h-screen flex-col items-center bg-[#1a202c] p-6 text-white">
-      <header className="flex w-full max-w-sm items-center justify-between pt-2 pb-6">
+      <header className="flex w-full max-w-sm items-center justify-between pt-2 pb-6 my-5 mb-15">
         <div className="flex gap-4">
-          <span className="text-xl font-black tracking-wider text-white underline decoration-white decoration-2 underline-offset-8">
+          <Link 
+            href={`/dashboard/${username}`} 
+            className="text-xl font-black tracking-wider text-white underline decoration-white decoration-2 underline-offset-8"
+          >
             play
-          </span>
+          </Link>
           <Link 
             href={`/${username}/inbox`} 
-            className="text-xl font-bold text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors"
+            className="text-xl font-bold text-zinc-500 hover:text-zinc-300 transition-colors"
           >
             inbox
           </Link>
         </div>
-        <button className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors">
-          <Settings size={22} />
-        </button>
+
+        {/* Menu Container with Floating Dropdown */}
+        <div className="relative" ref={menuRef}>
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors cursor-pointer"
+          >
+            <Menu size={22} />
+          </button>
+
+          {isMenuOpen && (
+            <div className="absolute right-0 mt-2 w-52 rounded-xl bg-[#1e2533]/95 border border-white/10 p-1.5 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150">
+              <Link 
+                href={`/${username}/birthday`}
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <Gift size={16} className="text-pink-400" />
+                Birthday letters
+              </Link>
+              <Link 
+                href={`/${username}/new-month`}
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <Calendar size={16} className="text-blue-400" />
+                New month letters
+              </Link>
+              <Link 
+                href={`/${username}/new-year`}
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <PartyPopper size={16} className="text-purple-400" />
+                New year letters
+              </Link>
+
+              {/* Conditionally show Upload if user role is admin */}
+              {user?.role === 'admin' && (
+                <Link 
+                  href={`/${username}/admin/upload`}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
+                >
+                  <Upload size={16} className="text-amber-400" />
+                  Upload
+                </Link>
+              )}
+
+              <div className="my-1 h-[1px] bg-white/10" />
+              
+              <Link 
+                href={`/${username}/settings`}
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <Settings size={16} className="text-zinc-400" />
+                Setting
+              </Link>
+            </div>
+          )}
+        </div>
       </header>
 
       <div className="flex w-full max-w-sm flex-1 flex-col gap-4 pb-8">

@@ -10,6 +10,7 @@ export const userRouter = createTRPCRouter({
       z.object({
         username: z.string().min(3),
         color: z.string(),
+        role: z.string().optional(), // Optional role field for admin assignment
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -28,6 +29,7 @@ export const userRouter = createTRPCRouter({
       return await ctx.db.insert(users).values({
         username: input.username,
         favoriteColor: input.color,
+        role: input.role ?? "user", // Defaults to "user" if role is omitted
       });
     }),
 
