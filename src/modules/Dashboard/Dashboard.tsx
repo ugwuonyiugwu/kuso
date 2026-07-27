@@ -61,7 +61,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
 
   return (
     <main className="relative flex min-h-screen flex-col items-center bg-[#1a202c] p-6 text-white">
-      <header className="flex w-full max-w-sm items-center justify-between pt-2 pb-6 my-5 mb-15">
+      <header className="flex w-full max-w-sm items-center justify-between pt-2 pb-6 my-3 mb-8">
         <div className="flex gap-4">
           <Link 
             href={`/dashboard/${username}`} 
@@ -89,7 +89,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
           {isMenuOpen && (
             <div className="absolute right-0 mt-2 w-52 rounded-xl bg-[#1e2533]/95 border border-white/10 p-1.5 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150">
               <Link 
-                href={`/${username}/birthday`}
+                href={`/${username}/letter/birthday-wishes`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -97,7 +97,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
                 Birthday letters
               </Link>
               <Link 
-                href={`/${username}/new-month`}
+                href={`/${username}/letter/new-month-wishes`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -105,7 +105,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
                 New month letters
               </Link>
               <Link 
-                href={`/${username}/new-year`}
+                href={`/${username}/letter/new-year-wishes`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -125,7 +125,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
                 </Link>
               )}
 
-              <div className="my-1 h-[1px] bg-white/10" />
+              <div className="my-1 h-1px bg-white/10" />
               
               <Link 
                 href={`/${username}/settings`}

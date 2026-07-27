@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { UploadDropzone } from '@/app/utils/uploadthing';
 import { trpc } from '@/trpc/client';
-import { CheckCircle2, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, ArrowLeft, AlertCircle, UploadCloud } from 'lucide-react';
 import Link from 'next/link';
+import { useUploadThing } from '@/app/utils/uploadthing';
 
 interface AdminUploadClientProps {
   username: string;
@@ -18,30 +18,66 @@ export function AdminUploadClient({ username, letterType = 'birthday-wishes', ti
   const [type, setType] = useState(letterType);
   const [content, setContent] = useState('');
   const [fontFamily, setFontFamily] = useState('Arial, sans-serif');
-  const [imageUrl, setImageUrl] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [errorMsg, setErrorMsg] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Use UploadThing hook for manual file uploads
+  const { startUpload, isUploading } = useUploadThing("frameUploader", {
+    onUploadError: (error) => {
+      setErrorMsg(`Upload error: ${error.message}`);
+    },
+  });
 
   const createFrameMutation = trpc.frame.createFrame.useMutation({
     onSuccess: () => {
       setSuccess(true);
       setFrameTitle('');
       setContent('');
-      setImageUrl('');
+      setFile(null);
+      setErrorMsg('');
       setTimeout(() => setSuccess(false), 3000);
+    },
+    onError: (error) => {
+      setErrorMsg(`Database error: ${error.message}`);
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageUrl) return;
-    createFrameMutation.mutate({ 
-      title: frameTitle, 
-      type, 
-      imageUrl,
-      content,
-      fontStyle: fontFamily, // saves the chosen font family string
-    });
+    setErrorMsg('');
+
+    if (!file) {
+      setErrorMsg('Please select an image file before publishing.');
+      return;
+    }
+
+    try {
+      // 1. Upload file to UploadThing first
+      const uploadRes = await startUpload([file]);
+
+      const uploadedUrl = uploadRes?.[0]?.url || (uploadRes?.[0] as { ufsUrl?: string })?.ufsUrl;
+
+      if (!uploadedUrl) {
+        setErrorMsg('Failed to get upload URL from UploadThing.');
+        return;
+      }
+
+      // 2. Save everything (Image URL, Text content, Font, etc.) to Neon database via tRPC
+      createFrameMutation.mutate({
+        title: frameTitle,
+        type,
+        imageUrl: uploadedUrl,
+        content,
+        fontStyle: fontFamily,
+      });
+
+    } catch (err: any) {
+      setErrorMsg(`Error: ${err?.message || 'Something went wrong'}`);
+    }
   };
+
+  const isPending = isUploading || createFrameMutation.isPending;
 
   return (
     <main className="relative flex min-h-screen flex-col items-center bg-[#1a202c] p-6 text-white">
@@ -55,7 +91,13 @@ export function AdminUploadClient({ username, letterType = 'birthday-wishes', ti
       <div className="w-full max-w-md flex flex-col gap-6 rounded-sm bg-[#2d3748]/80 border border-white/10 p-6 shadow-xl backdrop-blur-md">
         {success && (
           <div className="flex items-center gap-2 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 p-4 text-emerald-300 text-sm font-medium">
-            <CheckCircle2 size={18} /> Frame uploaded successfully!
+            <CheckCircle2 size={18} /> Frame uploaded and published successfully!
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="flex items-center gap-2 rounded-2xl bg-red-500/20 border border-red-500/30 p-4 text-red-300 text-sm font-medium">
+            <AlertCircle size={18} /> {errorMsg}
           </div>
         )}
 
@@ -113,40 +155,35 @@ export function AdminUploadClient({ username, letterType = 'birthday-wishes', ti
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-zinc-300">Upload Image Frame</label>
-            {imageUrl ? (
-              <div className="relative flex items-center justify-between rounded-xl bg-black/40 border border-white/10 p-3 text-sm text-emerald-400">
-                <span className="truncate">Image uploaded successfully</span>
-                <button 
-                  type="button" 
-                  onClick={() => setImageUrl('')}
-                  className="text-xs text-red-400 hover:underline cursor-pointer"
-                >
-                  Change
-                </button>
-              </div>
-            ) : (
-              <UploadDropzone
-                endpoint="frameUploader"
-                onClientUploadComplete={(res) => {
-                  if (res?.[0]?.url) {
-                    setImageUrl(res[0].url);
+            <label className="text-xs font-semibold text-zinc-300">Select Image Frame</label>
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/20 bg-black/20 p-4 text-center">
+              <input 
+                type="file" 
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    setFile(e.target.files[0]);
                   }
                 }}
-                onUploadError={(error: Error) => {
-                  alert(`ERROR! ${error.message}`);
-                }}
-                className="ut-allowed-content:text-zinc-400 ut-label:text-amber-400 border-dashed border-white/20 bg-black/20 rounded-2xl"
+                className="hidden" 
+                id="file-upload"
               />
-            )}
+              <label htmlFor="file-upload" className="flex flex-col items-center gap-2 cursor-pointer w-full">
+                <UploadCloud size={28} className="text-amber-400" />
+                <span className="text-xs text-zinc-300 font-medium">
+                  {file ? file.name : "Click to browse image file"}
+                </span>
+                <span className="text-[10px] text-zinc-500">Supports PNG, JPG, GIF</span>
+              </label>
+            </div>
           </div>
 
           <Button 
             type="submit" 
-            disabled={!imageUrl || createFrameMutation.isPending}
-            className="mt-2 h-12 w-full rounded-full bg-amber-500 text-base font-bold text-black hover:bg-amber-400 transition-colors cursor-pointer disabled:opacity-50"
+            disabled={isPending}
+            className="mt-2 h-12 w-full rounded-full bg-amber-500 text-base font-bold text-black hover:bg-amber-400 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {createFrameMutation.isPending ? "Saving..." : "Publish Frame"}
+            {isPending ? "Publishing Everything..." : "Publish Frame"}
           </Button>
         </form>
       </div>
