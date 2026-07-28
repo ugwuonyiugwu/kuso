@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { trpc } from '@/trpc/client';
-import { Plus, Trash2, ArrowLeft, Check } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 
@@ -20,21 +20,22 @@ interface TextLayer {
 }
 
 export function EditFrameClient({ username, letterType, frameId }: EditFrameClientProps) {
-  // Consumes the prefetched server-side data instantly
   const [frame] = trpc.frame.getById.useSuspenseQuery({ id: Number(frameId) });
 
   const [textLayers, setTextLayers] = useState<TextLayer[]>([
-    { id: '1', text: 'New text', x: 50, y: 30 },
+    { id: '1', text: 'Type your message here...', x: 50, y: 35 },
   ]);
 
   const [activeId, setActiveId] = useState<string | null>('1');
+  const [isSharing, setIsSharing] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const addTextLayer = () => {
     const newLayer: TextLayer = {
       id: Date.now().toString(),
-      text: 'Tap to edit text',
+      text: 'New text box',
       x: 50,
-      y: 50,
+      y: 55,
     };
     setTextLayers([...textLayers, newLayer]);
     setActiveId(newLayer.id);
@@ -51,16 +52,120 @@ export function EditFrameClient({ username, letterType, frameId }: EditFrameClie
   };
 
   const moveLayer = (id: string, direction: 'up' | 'down' | 'left' | 'right') => {
-    const step = 5;
+    const step = 4;
     setTextLayers(textLayers.map(l => {
       if (l.id !== id) return l;
       let { x, y } = l;
-      if (direction === 'up') y = Math.max(5, y - step);
+      if (direction === 'up') y = Math.max(10, y - step);
       if (direction === 'down') y = Math.min(90, y + step);
-      if (direction === 'left') x = Math.max(10, x - step);
-      if (direction === 'right') x = Math.min(90, x + step);
+      if (direction === 'left') x = Math.max(15, x - step);
+      if (direction === 'right') x = Math.max(85, x + step);
       return { ...l, x, y };
     }));
+  };
+
+  // Robust Native HTML5 Canvas Image Generator (Bypasses CORS & DOM styling bugs)
+  const handleShareAsImage = async () => {
+    if (!frame?.imageUrl) return;
+    try {
+      setIsSharing(true);
+      setActiveId(null);
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error("Could not create canvas context");
+
+      // Set high-res canvas proportions (matching 3:4 aspect ratio)
+      canvas.width = 1200;
+      canvas.height = 1600;
+
+      // Load background image safely via a cross-origin image object
+      const bgImage = new Image();
+      bgImage.crossOrigin = "anonymous";
+      
+      await new Promise((resolve, reject) => {
+        bgImage.onload = resolve;
+        bgImage.onerror = reject;
+        bgImage.src = frame.imageUrl;
+      });
+
+      // Draw background image to fill canvas
+      ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+
+      // Configure text style for layers
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 42px sans-serif';
+
+      // Draw each text layer onto the canvas at its relative position
+      textLayers.forEach((layer) => {
+        const posX = (layer.x / 100) * canvas.width;
+        const posY = (layer.y / 100) * canvas.height;
+
+        // Add shadow for text legibility
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 4;
+
+        // Simple text-wrapping logic for canvas text
+        const maxWidth = canvas.width * 0.75;
+        const words = layer.text.split(' ');
+        let line = '';
+        const lines = [];
+
+        for (let n = 0; n < words.length; n++) {
+          const testLine = line + words[n] + ' ';
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > maxWidth && n > 0) {
+            lines.push(line);
+            line = words[n] + ' ';
+          } else {
+            line = testLine;
+          }
+        }
+        lines.push(line);
+
+        // Render each wrapped line sequentially
+        const lineHeight = 54;
+        const startY = posY - ((lines.length - 1) * lineHeight) / 2;
+
+        lines.forEach((l, index) => {
+          ctx.fillText(l.trim(), posX, startY + (index * lineHeight));
+        });
+      });
+
+      // Convert canvas to image blob
+      const dataUrl = canvas.toDataURL('image/png', 0.95);
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `${letterType}-card.png`, { type: "image/png" });
+
+      const shareUrl = `${window.location.origin}/${username}/letter/${letterType}/view/${frameId}`;
+      const shareMessage = `Check out this custom ${letterType} card! View the full frame here: ${shareUrl}`;
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'Custom Letter Card',
+          text: shareMessage,
+          files: [file],
+        });
+      } else {
+        const link = document.createElement('a');
+        link.download = `${letterType}-card.png`;
+        link.href = dataUrl;
+        link.click();
+        
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
+        window.open(whatsappUrl, '_blank');
+      }
+    } catch (error) {
+      console.error("Error generating native image:", error);
+      alert("Could not generate image share. Please check console for details.");
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   return (
@@ -74,17 +179,26 @@ export function EditFrameClient({ username, letterType, frameId }: EditFrameClie
           <h1 className="text-xs font-bold text-amber-400">Edit Card</h1>
         </div>
         <Button 
-          onClick={() => alert("Card saved successfully!")}
-          className="h-7 px-3 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold text-[10px] rounded-lg"
+          onClick={handleShareAsImage}
+          disabled={isSharing}
+          className="h-7 px-3 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold text-[10px] rounded-lg flex items-center gap-1"
         >
-          <Check size={12} className="mr-1" /> Save & Send
+          <Share2 size={12} /> {isSharing ? "Generating..." : "Share as Image"}
         </Button>
       </header>
 
       {/* Main Canvas Area */}
-      <div className="relative w-full max-w-sm aspect-[3/4] bg-black rounded-2xl overflow-hidden border border-white/20 shadow-2xl my-2">
+      <div 
+        ref={cardRef}
+        className="relative w-full max-w-70 aspect-3/4 bg-black rounded-xl overflow-hidden border border-white/20 shadow-2xl my-2"
+      >
         {frame?.imageUrl && (
-          <img src={frame.imageUrl} alt={frame.title} className="w-full h-full object-cover select-none pointer-events-none" />
+          <img 
+            src={frame.imageUrl} 
+            alt={frame.title} 
+            crossOrigin="anonymous" 
+            className="w-full h-full object-cover select-none pointer-events-none" 
+          />
         )}
 
         {textLayers.map((layer) => {
@@ -94,16 +208,18 @@ export function EditFrameClient({ username, letterType, frameId }: EditFrameClie
               key={layer.id}
               onClick={() => setActiveId(layer.id)}
               style={{ left: `${layer.x}%`, top: `${layer.y}%`, transform: 'translate(-50%, -50%)' }}
-              className={`absolute cursor-pointer transition-all p-2 rounded-lg ${
-                isActive ? 'border-2 border-white bg-black/60 shadow-xl scale-105' : 'border border-dashed border-white/40 bg-black/30'
+              className={`absolute cursor-pointer transition-all p-2 rounded-lg max-w-[80%] w-max ${
+                isActive ? 'border-2 border-amber-400 bg-black/70 shadow-xl scale-105 z-20' : 'border border-dashed border-white/30 bg-black/40 z-10'
               }`}
             >
-              <p className="text-white font-medium text-center text-sm tracking-wide drop-shadow-md whitespace-nowrap">
-                {layer.text}
+              {/* Responsive wrapped text container */}
+              <p className="text-white font-medium text-center text-xs md:text-sm tracking-wide drop-shadow-md break-words whitespace-normal">
+                {layer.text || <span className="opacity-40 italic">Empty text</span>}
               </p>
 
+              {/* Floating controls */}
               {isActive && (
-                <div className="absolute -bottom-9 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-zinc-900/90 border border-white/20 p-1 rounded-md shadow-lg z-20">
+                <div className="absolute -bottom-9 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-zinc-900/95 border border-white/20 p-1 rounded-md shadow-xl z-30">
                   <button onClick={() => moveLayer(layer.id, 'left')} className="p-1 hover:bg-white/20 rounded text-[10px]">◀</button>
                   <button onClick={() => moveLayer(layer.id, 'up')} className="p-1 hover:bg-white/20 rounded text-[10px]">▲</button>
                   <button onClick={(e) => deleteLayer(layer.id, e)} className="p-1 text-red-400 hover:bg-red-500/20 rounded">
