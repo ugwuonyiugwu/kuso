@@ -123,14 +123,24 @@ export function DashboardClient({ username }: DashboardClientProps) {
 
               {/* Conditionally show Upload if user role is admin */}
               {user?.role === 'admin' && (
-                <Link 
-                  href={`/${username}/admin/upload`}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
-                >
-                  <Upload size={16} className="text-amber-400" />
-                  Upload
-                </Link>
+                <div>
+                  <Link 
+                    href={`/${username}/admin/upload`}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
+                  >
+                    <Upload size={16} className="text-amber-400" />
+                    Upload
+                  </Link>
+                  <Link 
+                    href={`/${username}/create`}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
+                  >
+                    <Upload size={16} className="text-amber-400" />
+                    create
+                  </Link>
+                </div>
               )}
 
               <div className="my-1 h-1px bg-white/10" />
