@@ -36,4 +36,16 @@ export const frameRouter = createTRPCRouter({
         where: eq(frames.type, input.type),
       });
     }),
+
+  getById: baseProcedure
+    .input(
+      z.object({
+        id: z.number(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      return await ctx.db.query.frames.findFirst({
+        where: eq(frames.id, input.id),
+      });
+    }),
 });
