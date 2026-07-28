@@ -16,8 +16,6 @@ interface AdminUploadClientProps {
 export function AdminUploadClient({ username, letterType = 'birthday-wishes', title = 'Upload Frame' }: AdminUploadClientProps) {
   const [frameTitle, setFrameTitle] = useState('');
   const [type, setType] = useState(letterType);
-  const [content, setContent] = useState('');
-  const [fontFamily, setFontFamily] = useState('Arial, sans-serif');
   const [file, setFile] = useState<File | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [success, setSuccess] = useState(false);
@@ -33,7 +31,6 @@ export function AdminUploadClient({ username, letterType = 'birthday-wishes', ti
     onSuccess: () => {
       setSuccess(true);
       setFrameTitle('');
-      setContent('');
       setFile(null);
       setErrorMsg('');
       setTimeout(() => setSuccess(false), 3000);
@@ -63,13 +60,13 @@ export function AdminUploadClient({ username, letterType = 'birthday-wishes', ti
         return;
       }
 
-      // 2. Save everything (Image URL, Text content, Font, etc.) to Neon database via tRPC
+      // 2. Save frame metadata and Image URL to Neon database via tRPC
       createFrameMutation.mutate({
         title: frameTitle,
         type,
         imageUrl: uploadedUrl,
-        content,
-        fontStyle: fontFamily,
+        content: '',
+        fontStyle: 'Arial, sans-serif',
       });
 
     } catch (err: any) {
@@ -103,18 +100,6 @@ export function AdminUploadClient({ username, letterType = 'birthday-wishes', ti
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-zinc-300">Frame Title / Caption</label>
-            <input 
-              type="text" 
-              value={frameTitle}
-              onChange={(e) => setFrameTitle(e.target.value)}
-              placeholder="e.g., Happy Birthday Special Wish" 
-              required
-              className="h-11 rounded-xl bg-black/40 border border-white/10 px-4 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-400 transition-colors"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-zinc-300">Category Type</label>
             <select 
               value={type}
@@ -126,32 +111,6 @@ export function AdminUploadClient({ username, letterType = 'birthday-wishes', ti
               <option value="new-year-wishes">New year wishes</option>
               <option value="letters">Letters</option>
             </select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-zinc-300">Letter Content & Font Family</label>
-              <select 
-                value={fontFamily}
-                onChange={(e) => setFontFamily(e.target.value)}
-                className="h-8 rounded-lg bg-black/40 border border-white/10 px-2 text-xs text-amber-300 focus:outline-none focus:border-amber-400 cursor-pointer"
-              >
-                <option value="Arial, sans-serif">Arial</option>
-                <option value="'Roboto', sans-serif">Roboto</option>
-                <option value="'Times New Roman', serif">Times New Roman</option>
-                <option value="'Courier New', monospace">Courier New</option>
-                <option value="Georgia, serif">Georgia</option>
-                <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans</option>
-              </select>
-            </div>
-            <textarea 
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Write the message or letter content here..." 
-              rows={4}
-              style={{ fontFamily: fontFamily }}
-              className="rounded-xl bg-black/40 border border-white/10 p-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-400 transition-colors resize-none"
-            />
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -183,7 +142,7 @@ export function AdminUploadClient({ username, letterType = 'birthday-wishes', ti
             disabled={isPending}
             className="mt-2 h-12 w-full rounded-full bg-amber-500 text-base font-bold text-black hover:bg-amber-400 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isPending ? "Publishing Everything..." : "Publish Frame"}
+            {isPending ? "Publishing Frame..." : "Publish Frame"}
           </Button>
         </form>
       </div>

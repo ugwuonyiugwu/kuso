@@ -112,6 +112,14 @@ export function DashboardClient({ username }: DashboardClientProps) {
                 <PartyPopper size={16} className="text-purple-400" />
                 New year letters
               </Link>
+              <Link 
+                href={`/${username}/letter/letter`}
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <PartyPopper size={16} className="text-purple-400" />
+                letter termplates
+              </Link>
 
               {/* Conditionally show Upload if user role is admin */}
               {user?.role === 'admin' && (

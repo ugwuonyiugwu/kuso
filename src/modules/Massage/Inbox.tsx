@@ -1,8 +1,8 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { trpc } from '@/trpc/client';
-import { MessageSquare, Menu, Calendar, Sparkles } from 'lucide-react';
+import { MessageSquare, Menu, Calendar, Sparkles, Gift, PartyPopper, Settings, Upload } from 'lucide-react';
 import Link from 'next/link';
 
 interface InboxClientProps {
@@ -10,7 +10,26 @@ interface InboxClientProps {
 }
 
 export function InboxClient({ username }: InboxClientProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const { data: userMessages, isLoading } = trpc.message.getInbox.useQuery({ username });
+  const [user] = trpc.user.getUserByUsername.useSuspenseQuery({ username });
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   return (
     <main className="relative flex min-h-screen flex-col items-center bg-[#1a202c] p-6 text-white">
@@ -30,9 +49,75 @@ export function InboxClient({ username }: InboxClientProps) {
             inbox
           </Link>
         </div>
-        <button className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors">
-          <Menu size={22} />
-        </button>
+
+        {/* Menu Container with Floating Dropdown */}
+        <div className="relative" ref={menuRef}>
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors cursor-pointer"
+          >
+            <Menu size={22} />
+          </button>
+
+          {isMenuOpen && (
+            <div className="absolute right-0 mt-2 w-52 rounded-xl bg-[#1e2533]/95 border border-white/10 p-1.5 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150">
+              <Link 
+                href={`/${username}/letter/birthday-wishes`}
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <Gift size={16} className="text-pink-400" />
+                Birthday letters
+              </Link>
+              <Link 
+                href={`/${username}/letter/new-month-wishes`}
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <Calendar size={16} className="text-blue-400" />
+                New month letters
+              </Link>
+              <Link 
+                href={`/${username}/letter/new-year-wishes`}
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <PartyPopper size={16} className="text-purple-400" />
+                New year letters
+              </Link>
+              <Link 
+                href={`/${username}/letter/letter`}
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <PartyPopper size={16} className="text-purple-400" />
+                letter termplates
+              </Link>
+
+              {user?.role === 'admin' && (
+                <Link 
+                  href={`/${username}/admin/upload`}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
+                >
+                  <Upload size={16} className="text-amber-400" />
+                  Upload
+                </Link>
+              )}
+
+              <div className="my-1 h-1px bg-white/10" />
+              
+              <Link 
+                href={`/${username}/settings`}
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <Settings size={16} className="text-zinc-400" />
+                Setting
+              </Link>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Content Container */}
@@ -64,7 +149,6 @@ export function InboxClient({ username }: InboxClientProps) {
                 <div 
                   className="flex flex-col gap-2 rounded-sm bg-[#2d3748]/60 p-4 border border-white/10 shadow-md backdrop-blur-sm transition-all hover:bg-[#2d3748] cursor-pointer"
                 >
-                  {/* Truncated message to 2 lines with text ellipsis */}
                   <p className="text-base font-medium text-zinc-100 wrap-break-words line-clamp-2 overflow-hidden text-ellipsis">
                     {msg.promptContent}
                   </p>
