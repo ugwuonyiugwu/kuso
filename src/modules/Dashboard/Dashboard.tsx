@@ -165,19 +165,19 @@ export function DashboardClient() {
                     <Upload size={16} className="text-amber-400" />
                     create
                   </Link>
+                   <Link 
+                    href={`/setting`}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-400 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <Settings size={16} className="text-amber-400" />
+                    Setting
+                  </Link>
                 </>
               )}
 
-              <div className="my-1 h-[1px] bg-white/10" />
               
-              <Link 
-                href={`/settings?token=${token}`}
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
-              >
-                <Settings size={16} className="text-zinc-400" />
-                Setting
-              </Link>
+             
             </div>
           )}
         </div>

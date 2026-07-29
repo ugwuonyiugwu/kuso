@@ -1,4 +1,4 @@
-import { integer, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -26,4 +26,12 @@ export const frames = pgTable("frames", {
   content: text("content"),
   fontStyle: text("font_style").default("font-sans"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const siteSettings = pgTable("site_settings", {
+  id: text("id").primaryKey().default("global_config"),
+  adImage: text("ad_image"),
+  adLink: text("ad_link"),
+  isActive: boolean("is_active").default(true).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
