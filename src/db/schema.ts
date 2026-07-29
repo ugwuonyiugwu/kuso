@@ -1,9 +1,9 @@
-// src/db/schema.ts
 import { integer, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  secretToken: text("secret_token").notNull(),
   role: text("role").default("user").notNull(),
   favoriteColor: text("favorite_color").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -23,7 +23,7 @@ export const frames = pgTable("frames", {
   title: text("title").notNull(),
   type: text("type").notNull(), 
   imageUrl: text("image_url").notNull(),
-  content: text("content"), // Added content column
-  fontStyle: text("font_style").default("font-sans"), // Added fontStyle column
+  content: text("content"),
+  fontStyle: text("font_style").default("font-sans"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

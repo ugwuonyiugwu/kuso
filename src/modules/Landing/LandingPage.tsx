@@ -22,9 +22,10 @@ export const HomePage = () => {
   const utils = trpc.useUtils();
 
   const createUser = trpc.user.createUser.useMutation({
-    onSuccess: () => {
-      localStorage.setItem("kuso_username", username.trim());
-      router.push(`/dashboard/${username.trim()}`);
+    onSuccess: (newUser) => {
+      localStorage.setItem("kuso_token", newUser.secretToken);
+      // Redirect to token-only dashboard route
+      router.push(`/dashboard?token=${newUser.secretToken}`);
     },
     onError: (error) => {
       setErrorMessage(error.message);
@@ -41,9 +42,10 @@ export const HomePage = () => {
         username: signInUsername.trim(),
       });
 
-      if (user && user.username) {
-        localStorage.setItem("kuso_username", user.username);
-        router.push(`/dashboard/${user.username}`);
+      if (user && user.secretToken) {
+        localStorage.setItem("kuso_token", user.secretToken);
+        // Redirect to token-only dashboard route
+        router.push(`/dashboard?token=${user.secretToken}`);
       } else {
         setErrorMessage("Username not found. Check it or register a new account.");
         setIsSigningIn(false);

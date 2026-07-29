@@ -2,19 +2,23 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { trpc } from '@/trpc/client';
-import { MessageSquare, Menu, Calendar, Sparkles, Gift, PartyPopper, Settings, Upload } from 'lucide-react';
+import { MessageSquare, Menu, Calendar, Sparkles, Gift, PartyPopper, Settings, Upload, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface InboxClientProps {
-  username: string;
+  token: string;
 }
 
-export function InboxClient({ username }: InboxClientProps) {
+export function InboxClient({ token }: InboxClientProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const { data: userMessages, isLoading } = trpc.message.getInbox.useQuery({ username });
-  const [user] = trpc.user.getUserByUsername.useSuspenseQuery({ username });
+  // Fetch user data and messages securely using the token
+  const { data: user, isLoading: isUserLoading } = trpc.user.getUserByToken.useQuery({ token });
+  const { data: userMessages, isLoading: isMessagesLoading } = trpc.message.getInbox.useQuery(
+    { username: user?.username ?? "" },
+    { enabled: !!user?.username }
+  );
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -31,19 +35,27 @@ export function InboxClient({ username }: InboxClientProps) {
     };
   }, [isMenuOpen]);
 
+  if (isUserLoading || !user) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#1a202c] text-white">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      </main>
+    );
+  }
+
   return (
     <main className="relative flex min-h-screen flex-col items-center bg-[#1a202c] p-6 text-white">
       {/* Header */}
       <header className="flex w-full max-w-sm items-center justify-between pt-2 pb-6 mb-15 my-5">
         <div className="flex gap-4">
           <Link 
-            href={`/dashboard/${username}`} 
+            href={`/dashboard?token=${token}`} 
             className="text-xl font-bold text-zinc-500 hover:text-zinc-300 transition-colors"
           >
             play
           </Link>
           <Link 
-            href={`/${username}/inbox`} 
+            href={`/inbox?token=${token}`} 
             className="text-xl font-black tracking-wider text-white underline decoration-white decoration-2 underline-offset-8"
           >
             inbox
@@ -62,7 +74,7 @@ export function InboxClient({ username }: InboxClientProps) {
           {isMenuOpen && (
             <div className="absolute right-0 mt-2 w-52 rounded-xl bg-[#1e2533]/95 border border-white/10 p-1.5 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150">
               <Link 
-                href={`/${username}/letter/birthday-wishes`}
+                href={`/letter/birthday-wishes?token=${token}`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -70,7 +82,7 @@ export function InboxClient({ username }: InboxClientProps) {
                 Birthday letters
               </Link>
               <Link 
-                href={`/${username}/letter/new-month-wishes`}
+                href={`/letter/new-month-wishes?token=${token}`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -78,7 +90,7 @@ export function InboxClient({ username }: InboxClientProps) {
                 New month letters
               </Link>
               <Link 
-                href={`/${username}/letter/new-year-wishes`}
+                href={`/letter/new-year-wishes?token=${token}`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -86,18 +98,18 @@ export function InboxClient({ username }: InboxClientProps) {
                 New year letters
               </Link>
               <Link 
-                href={`/${username}/letter/letter`}
+                href={`/letter/letter?token=${token}`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
                 <PartyPopper size={16} className="text-purple-400" />
-                letter termplates
+                Letter templates
               </Link>
 
               {user?.role === 'admin' && (
                 <div>
                   <Link 
-                    href={`/${username}/admin/upload`}
+                    href={`/admin/upload?token=${token}`}
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
                   >
@@ -105,20 +117,20 @@ export function InboxClient({ username }: InboxClientProps) {
                     Upload
                   </Link>
                   <Link 
-                    href={`/${username}/create`}
+                    href={`/create?token=${token}`}
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
                   >
                     <Upload size={16} className="text-amber-400" />
-                    create
+                    Create
                   </Link>
                 </div>
               )}
 
-              <div className="my-1 h-1px bg-white/10" />
+              <div className="my-1 h-[1px] bg-white/10" />
               
               <Link 
-                href={`/${username}/settings`}
+                href={`/settings?token=${token}`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -139,7 +151,7 @@ export function InboxClient({ username }: InboxClientProps) {
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Anonymous Messages</h2>
-              <p className="text-xs text-zinc-400">@{username}'s secret inbox</p>
+              <p className="text-xs text-zinc-400">@{user.username}'s secret inbox</p>
             </div>
           </div>
           <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-pink-400">
@@ -148,14 +160,14 @@ export function InboxClient({ username }: InboxClientProps) {
         </div>
 
         {/* Messages List */}
-        {isLoading ? (
+        {isMessagesLoading ? (
           <div className="flex flex-1 items-center justify-center py-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
           </div>
         ) : userMessages && userMessages.length > 0 ? (
           <div className="flex flex-col gap-3">
             {userMessages.map((msg) => (
-              <Link key={msg.id} href={`/${username}/inbox/${msg.slug}`} className="block">
+              <Link key={msg.id} href={`/inbox/${msg.slug}?token=${token}`} className="block">
                 <div 
                   className="flex flex-col gap-2 rounded-sm bg-[#2d3748]/60 p-4 border border-white/10 shadow-md backdrop-blur-sm transition-all hover:bg-[#2d3748] cursor-pointer"
                 >

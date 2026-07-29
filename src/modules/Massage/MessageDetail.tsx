@@ -10,9 +10,10 @@ import { toast } from "sonner";
 
 interface MessageDetailClientProps {
   slug: string;
+  token: string;
 }
 
-export function MessageDetailClient({ slug }: MessageDetailClientProps) {
+export function MessageDetailClient({ slug, token }: MessageDetailClientProps) {
   // Uses the prefetched data immediately
   const { data: messageData } = trpc.message.getMessageBySlug.useQuery({ slug });
   const [themeGradient, setThemeGradient] = useState<string | null>(null);
@@ -21,7 +22,7 @@ export function MessageDetailClient({ slug }: MessageDetailClientProps) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#1a202c] text-white gap-4">
         <p className="text-lg font-bold">Message not found or deleted.</p>
-        <Link href="/inbox">
+        <Link href={`/inbox?token=${token}`}>
           <Button className="rounded-full bg-white text-black font-bold">Back to Inbox</Button>
         </Link>
       </div>
@@ -83,8 +84,9 @@ export function MessageDetailClient({ slug }: MessageDetailClientProps) {
           </button>
         </div>
 
-        <Link href={`/${messageData.username}/inbox`}>
-          <button className="rounded-full bg-[#2d3748] p-2 text-zinc-300 hover:text-white transition-colors">
+        {/* Updated Close Link to use token */}
+        <Link href={`/inbox?token=${token}`}>
+          <button className="rounded-full bg-[#2d3748] p-2 text-zinc-300 hover:text-white transition-colors cursor-pointer">
             <X size={20} />
           </button>
         </Link>
@@ -114,7 +116,7 @@ export function MessageDetailClient({ slug }: MessageDetailClientProps) {
         <div className="flex items-center gap-4">
           <button 
             onClick={cycleTheme}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-pink-500 via-purple-500 to-cyan-400 shadow-lg hover:scale-105 transition-transform"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-pink-500 via-purple-500 to-cyan-400 shadow-lg hover:scale-105 transition-transform cursor-pointer"
           >
             <div className="h-10 w-10 rounded-full bg-[#1a202c] flex items-center justify-center">
               <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-pink-500 to-orange-400" />
@@ -123,7 +125,7 @@ export function MessageDetailClient({ slug }: MessageDetailClientProps) {
 
           <button 
             onClick={() => toast.info("Snapshot capture ready!")}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2d3748] border border-white/10 text-zinc-300 hover:text-white shadow-lg hover:scale-105 transition-transform"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2d3748] border border-white/10 text-zinc-300 hover:text-white shadow-lg hover:scale-105 transition-transform cursor-pointer"
           >
             <Camera size={20} />
           </button>
@@ -133,14 +135,15 @@ export function MessageDetailClient({ slug }: MessageDetailClientProps) {
         <div className="w-full flex flex-col gap-3 mt-2">
           <Button 
             onClick={() => toast.info("Upgrade to reveal sender identity!")}
-            className="h-14 w-full rounded-full bg-rose-500 hover:bg-rose-600 text-white text-lg font-black tracking-wide shadow-xl transition-transform active:scale-95"
+            className="h-14 w-full rounded-full bg-rose-500 hover:bg-rose-600 text-white text-lg font-black tracking-wide shadow-xl transition-transform active:scale-95 cursor-pointer"
           >
             Who sent this 👀
           </Button>
 
-          <Link href={`/${messageData.username}/inbox/${slug}/reply`} className="w-full">
+          {/* Updated Reply Link to use token */}
+          <Link href={`/inbox/${slug}/reply?token=${token}`} className="w-full">
             <Button 
-              className="h-14 w-full rounded-full bg-black hover:bg-zinc-900 text-white text-lg font-black tracking-wide shadow-xl transition-transform active:scale-95 flex items-center justify-center gap-2 border border-white/10"
+              className="h-14 w-full rounded-full bg-black hover:bg-zinc-900 text-white text-lg font-black tracking-wide shadow-xl transition-transform active:scale-95 flex items-center justify-center gap-2 border border-white/10 cursor-pointer"
             >
               <MessageCircle size={20} className="text-green-400 fill-green-400" />
               reply

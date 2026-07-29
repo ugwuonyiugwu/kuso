@@ -5,20 +5,28 @@ import { Loader2 } from "lucide-react";
 import { notFound } from "next/navigation";
 
 interface PageProps {
-  params: Promise<{
-    username: string;
+  searchParams: Promise<{
+    token?: string;
   }>;
 }
 
 export default async function DashboardPage(props: PageProps) {
-  const { username } = await props.params;
+  const searchParams = await props.searchParams;
+  const token = searchParams.token;
 
-  if (!username) {
-    return <div>Invalid Username</div>;
+  if (!token) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#1a202c] text-white p-6">
+        <div className="text-center rounded-3xl bg-black/40 p-8 border border-red-500/20 max-w-sm w-full">
+          <h1 className="text-xl font-bold text-red-400 mb-2">Missing Token</h1>
+          <p className="text-xs text-zinc-400">No access token provided in the URL.</p>
+        </div>
+      </main>
+    );
   }
 
   try {
-    await trpc.user.getUserByUsername.prefetch({ username });
+    await trpc.user.getUserByToken.prefetch({ token });
   } catch (error) {
     console.error("Prefetch error:", error);
     notFound();
@@ -33,7 +41,7 @@ export default async function DashboardPage(props: PageProps) {
           </main>
         }
       >
-        <DashboardClient username={username} />
+        <DashboardClient />
       </Suspense>
     </HydrateClient>
   );

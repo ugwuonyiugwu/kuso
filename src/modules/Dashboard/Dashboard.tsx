@@ -6,23 +6,34 @@ import { Copy, Check, Menu, Sparkles, Share2, Gift, Calendar, PartyPopper, Setti
 import { cn } from "@/lib/utils";
 import { trpc } from '@/trpc/client';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
-interface DashboardClientProps {
-  username: string;
-}
+export function DashboardClient() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token') || '';
 
-export function DashboardClient({ username }: DashboardClientProps) {
+  const [isMounted, setIsMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [profileLink, setProfileLink] = useState(`/${username}`);
+  const [profileLink, setProfileLink] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Set the full window origin safely on client mount to prevent hydration mismatch
   useEffect(() => {
-    setProfileLink(`${window.location.origin}/${username}`);
-  }, [username]);
+    setIsMounted(true);
+  }, []);
 
-  // Close menu when clicking outside
+  const { data: user, error, isLoading } = trpc.user.getUserByToken.useQuery(
+    { token },
+    { enabled: isMounted && Boolean(token) }
+  );
+
+  useEffect(() => {
+    if (user && typeof window !== 'undefined') {
+      // Updated to use the secure secret token route instead of the username
+      setProfileLink(`${window.location.origin}/send?token=${user.secretToken}`);
+    }
+  }, [user]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -37,8 +48,24 @@ export function DashboardClient({ username }: DashboardClientProps) {
     };
   }, [isMenuOpen]);
 
-  // Uses suspense query which automatically hooks into the server prefetch and retrieves the user data (including role)
-  const [user] = trpc.user.getUserByUsername.useSuspenseQuery({ username });
+  if (!isMounted || isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#1a202c] text-white">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      </div>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#1a202c] text-white p-6">
+        <div className="text-center rounded-3xl bg-black/40 p-8 border border-red-500/20 max-w-sm w-full">
+          <h1 className="text-xl font-bold text-red-400 mb-2">Unauthorized Access</h1>
+          <p className="text-xs text-zinc-400">You need a valid secure token to view this dashboard. Please log in again.</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleCopy = () => {
     navigator.clipboard.writeText(profileLink);
@@ -64,20 +91,19 @@ export function DashboardClient({ username }: DashboardClientProps) {
       <header className="flex w-full max-w-sm items-center justify-between pt-2 pb-6 my-3 mb-8">
         <div className="flex gap-4">
           <Link 
-            href={`/dashboard/${username}`} 
+            href={`/dashboard?token=${token}`} 
             className="text-xl font-black tracking-wider text-white underline decoration-white decoration-2 underline-offset-8"
           >
             play
           </Link>
           <Link 
-            href={`/${username}/inbox`} 
+            href={`/inbox?token=${token}`} 
             className="text-xl font-bold text-zinc-500 hover:text-zinc-300 transition-colors"
           >
             inbox
           </Link>
         </div>
 
-        {/* Menu Container with Floating Dropdown */}
         <div className="relative" ref={menuRef}>
           <button 
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -89,7 +115,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
           {isMenuOpen && (
             <div className="absolute right-0 mt-2 w-52 rounded-xl bg-[#1e2533]/95 border border-white/10 p-1.5 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150">
               <Link 
-                href={`/${username}/letter/birthday-wishes`}
+                href={`/letter/birthday-wishes?token=${token}`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -97,7 +123,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
                 Birthday letters
               </Link>
               <Link 
-                href={`/${username}/letter/new-month-wishes`}
+                href={`/letter/new-month-wishes?token=${token}`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -105,7 +131,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
                 New month letters
               </Link>
               <Link 
-                href={`/${username}/letter/new-year-wishes`}
+                href={`/letter/new-year-wishes?token=${token}`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -113,19 +139,18 @@ export function DashboardClient({ username }: DashboardClientProps) {
                 New year letters
               </Link>
               <Link 
-                href={`/${username}/letter/letter`}
+                href={`/letter/letter?token=${token}`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
                 <PartyPopper size={16} className="text-purple-400" />
-                letter termplates
+                letter templates
               </Link>
 
-              {/* Conditionally show Upload if user role is admin */}
               {user?.role === 'admin' && (
-                <div>
+                <>
                   <Link 
-                    href={`/${username}/admin/upload`}
+                    href={`/admin/upload?token=${token}`}
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
                   >
@@ -133,20 +158,20 @@ export function DashboardClient({ username }: DashboardClientProps) {
                     Upload
                   </Link>
                   <Link 
-                    href={`/${username}/create`}
+                    href={`/admin/create?token=${token}`}
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
                   >
                     <Upload size={16} className="text-amber-400" />
                     create
                   </Link>
-                </div>
+                </>
               )}
 
-              <div className="my-1 h-1px bg-white/10" />
+              <div className="my-1 h-[1px] bg-white/10" />
               
               <Link 
-                href={`/${username}/settings`}
+                href={`/settings?token=${token}`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -165,7 +190,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
         )}>
           <div className="relative mb-3 h-20 w-20 overflow-hidden rounded-full border-4 border-white shadow-lg">
             <div className="flex h-full w-full items-center justify-center bg-zinc-800 text-2xl font-bold">
-              {username ? username[0].toUpperCase() : "K"}
+              {user.username ? user.username[0].toUpperCase() : "K"}
             </div>
           </div>
 

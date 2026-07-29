@@ -3,6 +3,7 @@ import { z } from "zod";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { nanoid } from "nanoid";
 
 export const userRouter = createTRPCRouter({
   createUser: baseProcedure
@@ -10,11 +11,10 @@ export const userRouter = createTRPCRouter({
       z.object({
         username: z.string().min(3),
         color: z.string(),
-        role: z.string().optional(), // Optional role field for admin assignment
+        role: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Check if username already exists
       const existingUser = await ctx.db.query.users.findFirst({
         where: eq(users.username, input.username),
       });
@@ -26,14 +26,18 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      return await ctx.db.insert(users).values({
+      const secretToken = nanoid(32);
+
+      const [newUser] = await ctx.db.insert(users).values({
         username: input.username,
         favoriteColor: input.color,
-        role: input.role ?? "user", // Defaults to "user" if role is omitted
-      });
+        role: input.role ?? "user",
+        secretToken: secretToken,
+      }).returning();
+
+      return newUser;
     }),
 
-  // Lookup user by unique username for sign-in
   getUserByUsername: baseProcedure
     .input(
       z.object({
@@ -45,9 +49,52 @@ export const userRouter = createTRPCRouter({
         where: eq(users.username, input.username),
       });
 
-      // Return null safely instead of throwing a NOT_FOUND error
       if (!user) {
         return null;
+      }
+
+      return user;
+    }),
+
+  // NEW: Lookup user directly by secret token for token-only dashboard access
+  getUserByToken: baseProcedure
+    .input(
+      z.object({
+        token: z.string(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.secretToken, input.token),
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid access token.",
+        });
+      }
+
+      return user;
+    }),
+
+  getSecureDashboard: baseProcedure
+    .input(
+      z.object({
+        username: z.string(),
+        token: z.string(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.username, input.username),
+      });
+
+      if (!user || user.secretToken !== input.token) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid or missing access token!",
+        });
       }
 
       return user;
