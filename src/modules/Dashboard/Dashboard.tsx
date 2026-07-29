@@ -158,7 +158,7 @@ export function DashboardClient() {
                     Upload
                   </Link>
                   <Link 
-                    href={`/admin/create?token=${token}`}
+                    href={`/create`}
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
                   >
