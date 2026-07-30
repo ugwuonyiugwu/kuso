@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { trpc } from '@/trpc/client';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { MessageCircle, Camera, AlertTriangle, X } from 'lucide-react';
+import { Camera, AlertTriangle, X } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from "sonner";
 
@@ -17,12 +17,14 @@ export function MessageDetailClient({ slug, token }: MessageDetailClientProps) {
   // Uses the prefetched data immediately
   const { data: messageData } = trpc.message.getMessageBySlug.useQuery({ slug });
   const [themeGradient, setThemeGradient] = useState<string | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   if (!messageData) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#1a202c] text-white gap-4">
         <p className="text-lg font-bold">Message not found or deleted.</p>
-        <Link href={`/inbox?token=${token}`}>
+        <Link href={`/${token}/inbox`}>
           <Button className="rounded-full bg-white text-black font-bold">Back to Inbox</Button>
         </Link>
       </div>
@@ -61,96 +63,178 @@ export function MessageDetailClient({ slug, token }: MessageDetailClientProps) {
     toast.success(`Shared to ${platform} story preview!`);
   };
 
+  const handleShareAsImage = async () => {
+    if (!cardRef.current) return;
+    try {
+      setIsSharing(true);
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error("Could not create canvas context");
+
+      canvas.width = 1200;
+      canvas.height = 1400;
+
+      // Draw background color
+      ctx.fillStyle = '#1a202c';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw card container box with rounded corners
+      ctx.fillStyle = '#1e2530';
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(100, 150, 1000, 1000, 48);
+        ctx.fill();
+      } else {
+        ctx.fillRect(100, 150, 1000, 1000);
+      }
+
+      // Draw top gradient banner header inside card
+      // We simulate gradient block or solid primary accent
+      const gradient = ctx.createLinearGradient(100, 150, 1100, 550);
+      gradient.addColorStop(0, '#ec4899'); // pink-500
+      gradient.addColorStop(0.5, '#f43f5e'); // rose-500
+      gradient.addColorStop(1, '#fb923c'); // orange-400
+      
+      ctx.fillStyle = gradient;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(100, 150, 1000, 400, [48, 48, 0, 0]);
+        ctx.fill();
+      } else {
+        ctx.fillRect(100, 150, 1000, 400);
+      }
+
+      // Header text inside banner
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 52px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText("send me anonymous messages!", 600, 350);
+
+      // Message body text inside bottom card half
+      ctx.fillStyle = '#f4f4f5'; // zinc-100
+      ctx.font = 'bold 46px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+
+      const textToDraw = messageData.promptContent || "";
+      const maxWidth = 840;
+      const words = textToDraw.split(' ');
+      let line = '';
+      const lines = [];
+
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+          lines.push(line);
+          line = words[n] + ' ';
+        } else {
+          line = testLine;
+        }
+      }
+      lines.push(line);
+
+      const lineHeight = 64;
+      const startY = 700;
+
+      lines.forEach((l, index) => {
+        ctx.fillText(l.trim(), 600, startY + (index * lineHeight));
+      });
+
+      const dataUrl = canvas.toDataURL('image/png', 0.95);
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `anonymous-message.png`, { type: "image/png" });
+
+      const shareMessage = `Check out this anonymous message I received!`;
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'Anonymous Message',
+          text: shareMessage,
+          files: [file],
+        });
+      } else {
+        const link = document.createElement('a');
+        link.download = `anonymous-message.png`;
+        link.href = dataUrl;
+        link.click();
+        
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
+        window.open(whatsappUrl, '_blank');
+      }
+    } catch (error) {
+      console.error("Error generating native image:", error);
+      toast.error("Could not generate image share.");
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-between bg-[#1a202c] p-6 text-white overflow-x-hidden">
       
       {/* Top Header Icons */}
-      <header className="flex w-full max-w-sm items-center justify-between pt-2">
-        <button className="text-zinc-400 hover:text-white transition-colors">
-          <AlertTriangle size={22} />
-        </button>
-
-        <div className="flex items-center gap-3 bg-[#2d3748]/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-          <button onClick={() => handleShareStory('Instagram')} className="hover:scale-110 transition-transform text-pink-400 font-bold text-sm">
-            IG
-          </button>
-          <span className="text-zinc-600">•</span>
-          <button onClick={() => handleShareStory('Snapchat')} className="hover:scale-110 transition-transform text-yellow-400 font-bold text-sm">
-            SC
-          </button>
-          <span className="text-zinc-600">•</span>
-          <button onClick={() => handleShareStory('WhatsApp')} className="hover:scale-110 transition-transform text-green-400 font-bold text-sm">
-            WA
-          </button>
-        </div>
-
-        {/* Updated Close Link to use token */}
-        <Link href={`/inbox?token=${token}`}>
+      <header className="flex w-full max-w-sm items-center justify-between px-4 pt-2">
+        {/* Updated Close Link to use clean token route */}
+        <Link href={`/${token}/inbox`}>
           <button className="rounded-full bg-[#2d3748] p-2 text-zinc-300 hover:text-white transition-colors cursor-pointer">
             <X size={20} />
           </button>
         </Link>
+
+
+         {/* Customization & Share Image Buttons */}
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={cycleTheme}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-tr from-pink-500 via-purple-500 to-cyan-400 shadow-lg hover:scale-105 transition-transform cursor-pointer"
+            title="Cycle Theme"
+          >
+            <div className="h-10 w-10 rounded-full bg-[#1a202c] flex items-center justify-center">
+              <div className="h-6 w-6 rounded-full bg-linear-to-tr from-pink-500 to-orange-400" />
+            </div>
+          </button>
+
+          <button 
+            onClick={handleShareAsImage}
+            disabled={isSharing}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2d3748] border border-white/10 text-zinc-300 hover:text-white shadow-lg hover:scale-105 transition-transform cursor-pointer disabled:opacity-50"
+            title="Download / Share Snapshot"
+          >
+            <Camera size={20} />
+          </button>
+        </div>
       </header>
+
+
 
       {/* Main Card Section */}
       <div className="w-full max-w-sm flex flex-col items-center my-auto gap-6">
         
-        <div className="w-full flex flex-col rounded-3xl bg-[#1e2530] text-white shadow-2xl overflow-hidden border border-white/10">
+        <div 
+          ref={cardRef}
+          className="w-full flex flex-col rounded-3xl bg-[#1e2530] text-white shadow-2xl overflow-hidden border border-white/10"
+        >
           
           {/* Top Header Card Half (Dynamic User Color) */}
-          <div className={cn("flex items-center justify-center p-8 bg-gradient-to-b text-center min-h-[140px] transition-colors duration-500", getBackgroundGradient(messageData.favoriteColor))}>
+          <div className={cn("flex items-center justify-center p-8 bg-linear-to-b text-center min-h-35 transition-colors duration-500", getBackgroundGradient(messageData.favoriteColor))}>
             <h2 className="text-2xl font-black tracking-tight text-white drop-shadow-sm">
               send me anonymous messages!
             </h2>
           </div>
 
           {/* Bottom Card Half (Message Body) */}
-          <div className="p-8 text-center bg-[#1e2530] min-h-[120px] flex items-center justify-center">
-            <p className="text-xl font-bold text-zinc-100 break-words">
+          <div className="p-8 text-center bg-[#1e2530] min-h-30 flex items-center justify-center">
+            <p className="text-xl font-bold text-zinc-100 wrap-break-word">
               {messageData.promptContent}
             </p>
           </div>
         </div>
 
-        {/* Customization Toggle Buttons */}
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={cycleTheme}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-pink-500 via-purple-500 to-cyan-400 shadow-lg hover:scale-105 transition-transform cursor-pointer"
-          >
-            <div className="h-10 w-10 rounded-full bg-[#1a202c] flex items-center justify-center">
-              <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-pink-500 to-orange-400" />
-            </div>
-          </button>
-
-          <button 
-            onClick={() => toast.info("Snapshot capture ready!")}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2d3748] border border-white/10 text-zinc-300 hover:text-white shadow-lg hover:scale-105 transition-transform cursor-pointer"
-          >
-            <Camera size={20} />
-          </button>
-        </div>
-
-        {/* Action CTA Buttons */}
-        <div className="w-full flex flex-col gap-3 mt-2">
-          <Button 
-            onClick={() => toast.info("Upgrade to reveal sender identity!")}
-            className="h-14 w-full rounded-full bg-rose-500 hover:bg-rose-600 text-white text-lg font-black tracking-wide shadow-xl transition-transform active:scale-95 cursor-pointer"
-          >
-            Who sent this 👀
-          </Button>
-
-          {/* Updated Reply Link to use token */}
-          <Link href={`/inbox/${slug}/reply?token=${token}`} className="w-full">
-            <Button 
-              className="h-14 w-full rounded-full bg-black hover:bg-zinc-900 text-white text-lg font-black tracking-wide shadow-xl transition-transform active:scale-95 flex items-center justify-center gap-2 border border-white/10 cursor-pointer"
-            >
-              <MessageCircle size={20} className="text-green-400 fill-green-400" />
-              reply
-            </Button>
-          </Link>
-        </div>
-
+       
       </div>
 
       <div className="pb-2" />

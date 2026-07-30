@@ -4,18 +4,15 @@ import { notFound } from "next/navigation";
 
 interface PageProps {
   params: Promise<{
+    token: string;
     slug: string;
-  }>;
-  searchParams: Promise<{
-    token?: string;
   }>;
 }
 
-export default async function MessageDetailPage({ params, searchParams }: PageProps) {
-  const { slug } = await params;
-  const { token } = await searchParams;
+export default async function MessageDetailPage({ params }: PageProps) {
+  const { token, slug } = await params;
 
-  if (!token) {
+  if (!token || !slug) {
     return notFound();
   }
 

@@ -29,7 +29,7 @@ export function DashboardClient({ token }: DashboardClientProps) {
 
   useEffect(() => {
     if (user && typeof window !== 'undefined') {
-      setProfileLink(`${window.location.origin}/send?token=${user.secretToken}`);
+      setProfileLink(`${window.location.origin}/${user.secretToken}`);
     }
   }, [user]);
 

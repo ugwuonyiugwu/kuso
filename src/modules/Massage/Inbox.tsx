@@ -49,13 +49,13 @@ export function InboxClient({ token }: InboxClientProps) {
       <header className="flex w-full max-w-sm items-center justify-between pt-2 pb-6 mb-15 my-5">
         <div className="flex gap-4">
           <Link 
-            href={`/dashboard?token=${token}`} 
+            href={`/${token}/dashboard`} 
             className="text-xl font-bold text-zinc-500 hover:text-zinc-300 transition-colors"
           >
             play
           </Link>
           <Link 
-            href={`/inbox?token=${token}`} 
+            href={`/${token}/inbox`} 
             className="text-xl font-black tracking-wider text-white underline decoration-white decoration-2 underline-offset-8"
           >
             inbox
@@ -74,7 +74,7 @@ export function InboxClient({ token }: InboxClientProps) {
           {isMenuOpen && (
             <div className="absolute right-0 mt-2 w-52 rounded-xl bg-[#1e2533]/95 border border-white/10 p-1.5 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150">
               <Link 
-                href={`/letter/birthday-wishes?token=${token}`}
+                href={`/${token}/letter/birthday-wishes`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -82,7 +82,7 @@ export function InboxClient({ token }: InboxClientProps) {
                 Birthday letters
               </Link>
               <Link 
-                href={`/letter/new-month-wishes?token=${token}`}
+                href={`/${token}/letter/new-month-wishes`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -90,7 +90,7 @@ export function InboxClient({ token }: InboxClientProps) {
                 New month letters
               </Link>
               <Link 
-                href={`/letter/new-year-wishes?token=${token}`}
+                href={`/${token}/letter/new-year-wishes`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -98,7 +98,7 @@ export function InboxClient({ token }: InboxClientProps) {
                 New year letters
               </Link>
               <Link 
-                href={`/letter/letter?token=${token}`}
+                href={`/${token}/letter/letter`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -109,7 +109,7 @@ export function InboxClient({ token }: InboxClientProps) {
               {user?.role === 'admin' && (
                 <div>
                   <Link 
-                    href={`/admin/upload?token=${token}`}
+                    href={`/${token}/admin/upload`}
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
                   >
@@ -117,7 +117,7 @@ export function InboxClient({ token }: InboxClientProps) {
                     Upload
                   </Link>
                   <Link 
-                    href={`/create?token=${token}`}
+                    href={`/${token}/create`}
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
                   >
@@ -130,7 +130,7 @@ export function InboxClient({ token }: InboxClientProps) {
               <div className="my-1 h-[1px] bg-white/10" />
               
               <Link 
-                href={`/settings?token=${token}`}
+                href={`/${token}/settings`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -151,7 +151,7 @@ export function InboxClient({ token }: InboxClientProps) {
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Anonymous Messages</h2>
-              <p className="text-xs text-zinc-400">@{user.username}'s secret inbox</p>
+              <p className="text-xs text-zinc-400">@{user.username}&apos;s secret inbox</p>
             </div>
           </div>
           <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-pink-400">
@@ -167,7 +167,7 @@ export function InboxClient({ token }: InboxClientProps) {
         ) : userMessages && userMessages.length > 0 ? (
           <div className="flex flex-col gap-3">
             {userMessages.map((msg) => (
-              <Link key={msg.id} href={`/inbox/${msg.slug}?token=${token}`} className="block">
+              <Link key={msg.id} href={`/${token}/inbox/${msg.slug}`} className="block">
                 <div 
                   className="flex flex-col gap-2 rounded-sm bg-[#2d3748]/60 p-4 border border-white/10 shadow-md backdrop-blur-sm transition-all hover:bg-[#2d3748] cursor-pointer"
                 >
