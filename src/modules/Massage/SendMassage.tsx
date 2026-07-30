@@ -7,7 +7,7 @@ import { Lock, Dices, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trpc } from '@/trpc/client';
 import Link from 'next/link';
-import { toast } from "sonner"; // Import sonner toast
+import { toast } from "sonner";
 
 interface SendMessageClientProps {
   username: string;
@@ -18,7 +18,6 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  // Correct tRPC mutation setup
   const { mutate: sendMessage, isPending } = trpc.message.send.useMutation({
     onSuccess: () => {
       setSubmitted(true);
@@ -76,20 +75,18 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
             <p className="text-sm text-zinc-300">Your anonymous message was successfully delivered to @{username}.</p>
             <Button 
               onClick={() => setSubmitted(false)}
-              className="mt-4 w-full rounded-full bg-white text-black font-extrabold hover:bg-zinc-200 h-12"
+              className="mt-4 w-full rounded-full bg-white text-black font-extrabold hover:bg-zinc-200 h-12 cursor-pointer"
             >
               Send another message
             </Button>
           </div>
         ) : (
           <form onSubmit={handleSend} className="w-full flex flex-col gap-4">
-            {/* Main Card */}
             <div className="relative flex flex-col rounded-3xl bg-white text-black shadow-2xl overflow-hidden border border-white/40">
               
-              {/* User Header */}
               <div className="flex items-center gap-3 p-4 border-b border-zinc-100 bg-white">
                 <div className="h-10 w-10 overflow-hidden rounded-full bg-zinc-900 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                  {username[0].toUpperCase()}
+                  {username ? username[0].toUpperCase() : "U"}
                 </div>
                 <div className="flex flex-col">
                   <span className="font-extrabold text-zinc-900 text-sm">@{username}</span>
@@ -97,7 +94,6 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
                 </div>
               </div>
 
-              {/* Text Input Area */}
               <div className={cn(
                 "relative p-5 bg-linear-to-b flex flex-col justify-between min-h-45",
                 getBackgroundGradient(favoriteColor)
@@ -110,12 +106,11 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
                   className="w-full bg-transparent border-none text-white placeholder:text-white/70 text-lg font-medium resize-none focus-visible:ring-0 shadow-none p-0 min-h-27.5"
                 />
 
-                {/* Dice Button */}
                 <div className="flex justify-end pt-2">
                   <button
                     type="button"
                     onClick={getRandomPrompt}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 transition-transform active:scale-95 shadow-sm"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 transition-transform active:scale-95 shadow-sm cursor-pointer"
                   >
                     <Dices size={18} />
                   </button>
@@ -123,30 +118,27 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
               </div>
             </div>
 
-            {/* Privacy Lock text */}
             <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-white/90 drop-shadow-sm my-1">
               <Lock size={13} className="text-amber-300 fill-amber-300" />
               <span>anonymous q&a</span>
             </div>
 
-            {/* Send Button */}
             <Button
               type="submit"
               disabled={!message.trim() || isPending}
-              className="h-14 w-full rounded-full bg-black text-white text-lg font-black tracking-wide shadow-xl hover:bg-zinc-900 transition-transform active:scale-95 disabled:opacity-50"
+              className="h-14 w-full rounded-full bg-black text-white text-lg font-black tracking-wide shadow-xl hover:bg-zinc-900 transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               {isPending ? "Sending..." : "Send!"}
             </Button>
           </form>
         )}
 
-        {/* Bottom CTA to get their own link */}
         <div className="w-full flex flex-col items-center gap-2 mt-4">
           <span className="text-xs font-extrabold text-amber-300 drop-shadow-md">
             👇 249 friends just tapped the button 👇
           </span>
           <Link href="/" className="w-full">
-            <Button className="h-14 w-full rounded-full bg-black text-white text-base font-extrabold shadow-xl hover:bg-zinc-900 transition-transform active:scale-95">
+            <Button className="h-14 w-full rounded-full bg-black text-white text-base font-extrabold shadow-xl hover:bg-zinc-900 transition-transform active:scale-95 cursor-pointer">
               Get your own messages!
             </Button>
           </Link>

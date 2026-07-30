@@ -1,27 +1,25 @@
-// src/app/[username]/letter/[letterType]/edit/[frameId]/page.tsx
 import { trpc, HydrateClient } from "@/trpc/server";
 import { EditFrameClient } from "@/modules/Dashboard/EditFrameClient";
 
 interface PageProps {
   params: Promise<{
-    username: string;
+    token: string;
     letterType: string;
     frameId: string;
   }>;
 }
 
 export default async function EditFramePage({ params }: PageProps) {
-  const { username, letterType, frameId } = await params;
+  const { token, letterType, frameId } = await params;
   const parsedFrameId = Number(frameId);
 
-  // Prefetch user data and frame details on the server
-  void trpc.user.getUserByUsername.prefetch({ username });
+  // Prefetch frame details on the server
   void trpc.frame.getById.prefetch({ id: parsedFrameId });
 
   return (
     <HydrateClient>
       <EditFrameClient 
-        username={username} 
+        token={token}
         letterType={letterType} 
         frameId={frameId} 
       />

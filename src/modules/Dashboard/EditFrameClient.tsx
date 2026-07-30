@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 
 interface EditFrameClientProps {
-  username: string;
+  token: string;
   letterType: string;
   frameId: string;
 }
@@ -18,7 +18,7 @@ interface TextLayer {
   x: number;
   y: number;
   width: number;
-  fontSize: number; // Added font size percentage scale
+  fontSize: number;
   color: string;
   fontStyle: string;
 }
@@ -26,7 +26,7 @@ interface TextLayer {
 const FONT_OPTIONS = [
   { label: 'Roboto', value: 'Roboto, sans-serif' },
   { label: 'Times New Roman', value: '"Times New Roman", serif' },
-  { label: 'Comic Sans', value: '"Comic Sans MS", "Chalkboard SE", "Comic Neue", cursive' }, // Fixed fallback stack for authentic curly/casual look
+  { label: 'Comic Sans', value: '"Comic Sans MS", "Chalkboard SE", "Comic Neue", cursive' },
   { label: 'Georgia', value: 'Georgia, serif' },
   { label: 'Courier New', value: '"Courier New", monospace' },
   { label: 'Impact', value: 'Impact, sans-serif' },
@@ -46,7 +46,7 @@ const COLOR_OPTIONS = [
   '#ec4899', // Pink
 ];
 
-export function EditFrameClient({ username, letterType, frameId }: EditFrameClientProps) {
+export function EditFrameClient({ token, letterType, frameId }: EditFrameClientProps) {
   const [frame] = trpc.frame.getById.useSuspenseQuery({ id: Number(frameId) });
 
   const [textLayers, setTextLayers] = useState<TextLayer[]>([
@@ -59,6 +59,11 @@ export function EditFrameClient({ username, letterType, frameId }: EditFrameClie
   const cardRef = useRef<HTMLDivElement>(null);
 
   const activeLayer = textLayers.find(l => l.id === activeId);
+
+  // Helper to maintain token in sub-routes
+  const getHref = (path: string) => {
+    return token ? `${path}?token=${token}` : path;
+  };
 
   const addTextLayer = () => {
     const newLayer: TextLayer = {
@@ -179,7 +184,7 @@ export function EditFrameClient({ username, letterType, frameId }: EditFrameClie
       const blob = await res.blob();
       const file = new File([blob], `${letterType}-card.png`, { type: "image/png" });
 
-      const shareUrl = `${window.location.origin}/${username}/letter/${letterType}/view/${frameId}`;
+      const shareUrl = `${window.location.origin}/${token}/letter/${letterType}/view/${frameId}`;
       const shareMessage = `Check out this custom ${letterType} card! View the full frame here: ${shareUrl}`;
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -211,7 +216,7 @@ export function EditFrameClient({ username, letterType, frameId }: EditFrameClie
 
       <header className="flex w-full items-center justify-between pt-2 pb-3 px-2 mb-2 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <Link href={`/${username}/letter/${letterType}`} className="text-xs font-semibold text-zinc-400 hover:text-white flex items-center gap-1">
+          <Link href={`/${token}/letter/${letterType}`} className="text-xs font-semibold text-zinc-400 hover:text-white flex items-center gap-1">
             <ArrowLeft size={14} /> Back
           </Link>
           <span className="text-zinc-600">/</span>
@@ -260,7 +265,6 @@ export function EditFrameClient({ username, letterType, frameId }: EditFrameClie
 
         {textLayers.map((layer) => {
           const isActive = activeId === layer.id && !isPreviewMode;
-          // Scale down the canvas fontSize value proportionally for real-time DOM display view
           const displayFontSize = Math.max(12, layer.fontSize * 0.35);
 
           return (

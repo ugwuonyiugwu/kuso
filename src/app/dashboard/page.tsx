@@ -8,11 +8,17 @@ interface PageProps {
   searchParams: Promise<{
     token?: string;
   }>;
+  params?: Promise<{
+    token?: string;
+  }>;
 }
 
 export default async function DashboardPage(props: PageProps) {
   const searchParams = await props.searchParams;
-  const token = searchParams.token;
+  const params = props.params ? await props.params : {};
+  
+  // Accept token from either query parameter or dynamic route parameter
+  const token = searchParams.token || params.token;
 
   if (!token) {
     return (
@@ -41,7 +47,7 @@ export default async function DashboardPage(props: PageProps) {
           </main>
         }
       >
-        <DashboardClient />
+        <DashboardClient token={token} />
       </Suspense>
     </HydrateClient>
   );

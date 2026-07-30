@@ -3,27 +3,35 @@
 import React from 'react';
 import { trpc } from '@/trpc/client';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 interface LetterPageClientProps {
   username: string;
   letterType: string;
   title: string;
+  token: string;
 }
 
-export function LetterPageClient({ username, letterType, title }: LetterPageClientProps) {
-  // Fetch user data
-  const [user] = trpc.user.getUserByUsername.useSuspenseQuery({ username });
-
+export function LetterPageClient({ username, letterType, title, token }: LetterPageClientProps) {
   // Fetch frames from backend
   const [items = []] = trpc.frame.getByType.useSuspenseQuery({ type: letterType });
+
+  // Helper function to include the token as a query parameter for dashboard / routes
+  const getHref = (path: string) => {
+    return token ? `${path}?token=${token}` : path;
+  };
 
   return (
     <main className="relative flex min-h-screen flex-col items-center bg-[#1a202c] p-2 text-white">
       {/* Compact App Header */}
       <header className="flex w-full items-center justify-between pt-2 pb-3 px-2 mb-2 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <Link href={`/dashboard/${username}`} className="text-xs font-semibold text-zinc-400 hover:text-white transition-colors">
-            &larr; Back
+          {/* Fixed: Passes the token back to the dashboard query param */}
+          <Link 
+            href={getHref('/dashboard')} 
+            className="text-xs font-semibold text-zinc-400 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+          >
+            <ArrowLeft size={14} /> Back
           </Link>
           <span className="text-zinc-600">/</span>
           <h1 className="text-sm font-black capitalize tracking-wider text-amber-400 truncate max-w-45">{title}</h1>
@@ -40,7 +48,7 @@ export function LetterPageClient({ username, letterType, title }: LetterPageClie
           items.map((item) => (
             <Link 
               key={item.id} 
-              href={`/${username}/letter/${letterType}/edit/${item.id}`}
+              href={`/${token}/letter/${letterType}/edit/${item.id}`}
               className="group relative flex flex-col overflow-hidden bg-[#2d3748]/90 border border-white/15 shadow-md transition-all active:scale-95 cursor-pointer hover:border-amber-400"
             >
               {/* Template Image Frame Container */}

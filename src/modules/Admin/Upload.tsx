@@ -8,12 +8,12 @@ import Link from 'next/link';
 import { useUploadThing } from '@/app/utils/uploadthing';
 
 interface AdminUploadClientProps {
-  username: string;
+  token: string;
   letterType?: string;
   title?: string;
 }
 
-export function AdminUploadClient({ username, letterType = 'birthday-wishes', title = 'Upload Frame' }: AdminUploadClientProps) {
+export function AdminUploadClient({ token, letterType = 'birthday-wishes', title = 'Upload Frame' }: AdminUploadClientProps) {
   const [frameTitle, setFrameTitle] = useState('');
   const [type, setType] = useState(letterType);
   const [file, setFile] = useState<File | null>(null);
@@ -60,9 +60,9 @@ export function AdminUploadClient({ username, letterType = 'birthday-wishes', ti
         return;
       }
 
-      // 2. Save frame metadata and Image URL to Neon database via tRPC
+      // 2. Save frame metadata and Image URL to database via tRPC
       createFrameMutation.mutate({
-        title: frameTitle,
+        title: frameTitle || 'Untitled Frame',
         type,
         imageUrl: uploadedUrl,
         content: '',
@@ -79,8 +79,8 @@ export function AdminUploadClient({ username, letterType = 'birthday-wishes', ti
   return (
     <main className="relative flex min-h-screen flex-col items-center bg-[#1a202c] p-6 text-white">
       <header className="flex w-full max-w-md items-center justify-between pt-2 pb-6 mb-4">
-        <Link href={`/dashboard/${username}`} className="flex items-center gap-2 pl-5 text-sm font-semibold text-zinc-400 hover:text-white transition-colors">
-          <ArrowLeft size={16} /> 
+        <Link href={`/dashboard?token=${token}`} className="flex items-center gap-2 pl-5 text-sm font-semibold text-zinc-400 hover:text-white transition-colors">
+          <ArrowLeft size={16} /> Back
         </Link>
         <h1 className="text-lg font-black tracking-wider text-amber-400">{title}</h1>
       </header>
@@ -99,6 +99,17 @@ export function AdminUploadClient({ username, letterType = 'birthday-wishes', ti
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-zinc-300">Template Title</label>
+            <input 
+              type="text" 
+              value={frameTitle}
+              onChange={(e) => setFrameTitle(e.target.value)}
+              placeholder="e.g. August Blessings"
+              className="h-11 rounded-xl bg-black/40 border border-white/10 px-4 text-sm text-white focus:outline-none focus:border-amber-400 transition-colors"
+            />
+          </div>
+
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-zinc-300">Category Type</label>
             <select 

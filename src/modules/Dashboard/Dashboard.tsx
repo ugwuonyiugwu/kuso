@@ -6,12 +6,12 @@ import { Copy, Check, Menu, Sparkles, Share2, Gift, Calendar, PartyPopper, Setti
 import { cn } from "@/lib/utils";
 import { trpc } from '@/trpc/client';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 
-export function DashboardClient() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token') || '';
+interface DashboardClientProps {
+  token: string;
+}
 
+export function DashboardClient({ token }: DashboardClientProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -29,7 +29,6 @@ export function DashboardClient() {
 
   useEffect(() => {
     if (user && typeof window !== 'undefined') {
-      // Updated to use the secure secret token route instead of the username
       setProfileLink(`${window.location.origin}/send?token=${user.secretToken}`);
     }
   }, [user]);
@@ -97,7 +96,7 @@ export function DashboardClient() {
             play
           </Link>
           <Link 
-            href={`/inbox?token=${token}`} 
+            href={`/${token}/inbox`}
             className="text-xl font-bold text-zinc-500 hover:text-zinc-300 transition-colors"
           >
             inbox
@@ -115,7 +114,7 @@ export function DashboardClient() {
           {isMenuOpen && (
             <div className="absolute right-0 mt-2 w-52 rounded-xl bg-[#1e2533]/95 border border-white/10 p-1.5 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150">
               <Link 
-                href={`/letter/birthday-wishes?token=${token}`}
+                href={`/${token}/letter/birthday-wishes`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -123,7 +122,7 @@ export function DashboardClient() {
                 Birthday letters
               </Link>
               <Link 
-                href={`/letter/new-month-wishes?token=${token}`}
+                href={`/${token}/letter/new-month-wishes`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -131,7 +130,7 @@ export function DashboardClient() {
                 New month letters
               </Link>
               <Link 
-                href={`/letter/new-year-wishes?token=${token}`}
+                href={`/${token}/letter/new-year-wishes`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -139,7 +138,7 @@ export function DashboardClient() {
                 New year letters
               </Link>
               <Link 
-                href={`/letter/letter?token=${token}`}
+                href={`/${token}/letter/letters`}
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
               >
@@ -150,7 +149,7 @@ export function DashboardClient() {
               {user?.role === 'admin' && (
                 <>
                   <Link 
-                    href={`/admin/upload?token=${token}`}
+                    href={`/${token}/admin/upload`}
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
                   >
@@ -158,15 +157,15 @@ export function DashboardClient() {
                     Upload
                   </Link>
                   <Link 
-                    href={`/create`}
+                    href={`/create?token=${token}`}
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
                   >
                     <Upload size={16} className="text-amber-400" />
                     create
                   </Link>
-                   <Link 
-                    href={`/setting`}
+                  <Link 
+                    href={`/setting?token=${token}`}
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-400 hover:bg-white/10 hover:text-white transition-colors"
                   >
@@ -175,9 +174,6 @@ export function DashboardClient() {
                   </Link>
                 </>
               )}
-
-              
-             
             </div>
           )}
         </div>

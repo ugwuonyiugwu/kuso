@@ -6,11 +6,15 @@ import { InboxClient } from "@/modules/Massage/Inbox";
 import { trpc, HydrateClient } from "@/trpc/server";
 
 interface PageProps {
+  params: Promise<{ token: string }>;
   searchParams: Promise<{ token?: string }>;
 }
 
-export default async function InboxPage({ searchParams }: PageProps) {
-  const { token } = await searchParams;
+export default async function InboxPage({ params, searchParams }: PageProps) {
+  const resolvedParams = await params;
+  const resolvedSearch = await searchParams;
+
+  const token = resolvedParams.token || resolvedSearch.token;
 
   if (!token) {
     return notFound();
