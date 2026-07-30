@@ -2,11 +2,8 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const username = searchParams.get('username') || 'Kuso';
-
     return new ImageResponse(
       (
         <div
@@ -38,31 +35,27 @@ export async function GET(request: Request) {
               color: 'white',
             }}
           >
-            {/* Avatar Circle */}
+            {/* Logo/Icon Circle */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '110px',
-                height: '110px',
-                borderRadius: '55px',
+                width: '120px',
+                height: '120px',
+                borderRadius: '60px',
                 backgroundColor: '#2563eb',
                 color: 'white',
-                fontSize: '52px',
-                fontWeight: 'bold',
-                marginBottom: '20px',
+                fontSize: '42px',
+                fontWeight: '900',
+                marginBottom: '25px',
                 boxShadow: '0 10px 25px rgba(37, 99, 235, 0.5)',
               }}
             >
-              {username[0].toUpperCase()}
+              K
             </div>
 
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#94a3b8', marginBottom: '15px', textTransform: 'lowercase' }}>
-              @{username}
-            </div>
-
-            <div style={{ fontSize: '48px', fontWeight: '900', color: 'white', textAlign: 'center', lineHeight: '1.2' }}>
+            <div style={{ fontSize: '52px', fontWeight: '900', color: 'white', textAlign: 'center', lineHeight: '1.2' }}>
               send me anonymous messages!
             </div>
           </div>
