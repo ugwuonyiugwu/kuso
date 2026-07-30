@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, Copy, Check, Edit3, X } from 'lucide-react';
+import { MessageCircle, Edit3, X } from 'lucide-react';
 import Link from 'next/link';
 
 interface NewMonthWishClientProps {
@@ -22,7 +22,6 @@ export function NewMonthWishClient({
 
   const [name, setName] = useState(nameParam || initialName || 'Onyedikachi');
   const [message, setMessage] = useState(messageParam || initialMessage);
-  const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -38,19 +37,20 @@ export function NewMonthWishClient({
     if (typeof window === 'undefined') return '';
     const baseUrl = `${window.location.origin}${window.location.pathname}`;
     const params = new URLSearchParams();
+    
     params.set('name', name.trim() || 'Friend');
-    params.set('message', message.trim() || initialMessage);
+    
+    if (message.trim() && message.trim() !== initialMessage) {
+      params.set('message', message.trim());
+    }
+    
     return `${baseUrl}?${params.toString()}`;
   };
 
   const handleWhatsAppShare = () => {
-    // 1. Set flag in session storage so your global AdPopup component knows to display the ad
     sessionStorage.setItem('ad_whatsapp_triggered', 'true');
-
-    // 2. Dispatch a custom window event so components listening on the same page can react immediately if needed
     window.dispatchEvent(new Event('whatsapp_shared'));
 
-    // 3. Open WhatsApp share link
     const link = getShareableLink();
     const text = encodeURIComponent(`Check out this new month message prepared for you! ✨\n\n${link}`);
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
@@ -94,10 +94,11 @@ export function NewMonthWishClient({
 
         {/* Card Text Content Overlay */}
         <div className="absolute inset-0 m-7 pt-15 px-6 flex flex-col justify-start text-left z-10 overflow-hidden">
-          <p className="text-base md:text-lg italic font-serif text-amber-200 pl-5 mb-2 drop-shadow animate-bounce shrink-0 truncate">
+          <p className="text-base md:text-lg italic font-serif text-amber-200 pl-7 mb-2 drop-shadow animate-bounce shrink-0 truncate">
             Dear {name},
           </p>
-          <p className="text-[11px] md:text-xs font-medium leading-relaxed text-zinc-100 italic drop-shadow overflow-hidden">
+          {/* Added whitespace-pre-wrap to respect new lines and spacing */}
+          <p className="text-[11px] md:text-xs font-medium leading-relaxed text-zinc-100 italic drop-shadow overflow-y-auto whitespace-pre-wrap max-h-[55%]">
             {message}
           </p>
         </div>
@@ -137,7 +138,7 @@ export function NewMonthWishClient({
               value={message} 
               onChange={(e) => setMessage(e.target.value)} 
               placeholder="Enter custom wish message..."
-              rows={3}
+              rows={4}
               className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 p-2.5 rounded-xl text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500 resize-none"
             />
           </div>

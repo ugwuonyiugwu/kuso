@@ -117,26 +117,24 @@ export function InboxClient({ token }: InboxClientProps) {
                     Upload
                   </Link>
                   <Link 
-                    href={`/${token}/create`}
+                    href={`/create?token=${token}`}
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-300 hover:bg-white/10 hover:text-amber-200 transition-colors"
                   >
                     <Upload size={16} className="text-amber-400" />
                     Create
                   </Link>
+                  <Link 
+                    href={`/setting?token=${token}`}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-400 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <Settings size={16} className="text-amber-400" />
+                    Setting
+                  </Link>
                 </div>
-              )}
-
-              <div className="my-1 h-[1px] bg-white/10" />
+              )}           
               
-              <Link 
-                href={`/${token}/settings`}
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10 hover:text-white transition-colors"
-              >
-                <Settings size={16} className="text-zinc-400" />
-                Setting
-              </Link>
             </div>
           )}
         </div>
