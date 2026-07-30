@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Menu, Sparkles, Share2, Gift, Calendar, PartyPopper, Settings, Upload } from "lucide-react";
+import { Copy, Check, Menu, Sparkles, Share2, Gift, Calendar, PartyPopper, Settings, Upload, Edit3, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trpc } from '@/trpc/client';
 import Link from 'next/link';
@@ -16,6 +16,11 @@ export function DashboardClient({ token }: DashboardClientProps) {
   const [copied, setCopied] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [profileLink, setProfileLink] = useState('');
+  
+  // States for editable card prompt message
+  const [cardMessage, setCardMessage] = useState('send me anonymous messages!');
+  const [isEditingMessage, setIsEditingMessage] = useState(false);
+
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,9 +34,16 @@ export function DashboardClient({ token }: DashboardClientProps) {
 
   useEffect(() => {
     if (user && typeof window !== 'undefined') {
-      setProfileLink(`${window.location.origin}/${user.secretToken}`);
+      const baseUrl = `${window.location.origin}/${user.secretToken}`;
+      const params = new URLSearchParams();
+      if (cardMessage !== 'send me anonymous messages!') {
+        params.set('msg', cardMessage);
+        setProfileLink(`${baseUrl}?${params.toString()}`);
+      } else {
+        setProfileLink(baseUrl);
+      }
     }
-  }, [user]);
+  }, [user, cardMessage]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -90,7 +102,7 @@ export function DashboardClient({ token }: DashboardClientProps) {
       <header className="flex w-full max-w-sm items-center justify-between pt-2 pb-6 my-3 mb-8">
         <div className="flex gap-4">
           <Link 
-            href={`/dashboard?token=${token}`} 
+            href={`/dashboard?token=${token}`}
             className="text-xl font-black tracking-wider text-white underline decoration-white decoration-2 underline-offset-8"
           >
             play
@@ -180,6 +192,7 @@ export function DashboardClient({ token }: DashboardClientProps) {
       </header>
 
       <div className="flex w-full max-w-sm flex-1 flex-col gap-4 pb-8">
+        {/* Editable Message Card Preview */}
         <div className={cn(
           "relative flex flex-col items-center justify-center rounded-3xl border-2 bg-black/40 p-6 text-center backdrop-blur-md transition-all",
           getColorGlowStyles(user?.favoriteColor)
@@ -190,16 +203,53 @@ export function DashboardClient({ token }: DashboardClientProps) {
             </div>
           </div>
 
-          <h2 className="text-xl font-extrabold tracking-tight text-white">
-            send me anonymous messages!
+          <h2 className="text-xl font-extrabold tracking-tight text-white px-2">
+            {cardMessage}
           </h2>
 
-          <div className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm cursor-pointer hover:bg-white/20">
-            <Sparkles size={16} className="text-white" />
-          </div>
+          <button 
+            onClick={() => setIsEditingMessage(!isEditingMessage)}
+            className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm cursor-pointer hover:bg-white/20 transition-all"
+            title="Edit prompt message"
+          >
+            {isEditingMessage ? <X size={16} className="text-white" /> : <Edit3 size={16} className="text-white" />}
+          </button>
         </div>
 
-        <div className="flex flex-col items-center justify-center rounded-3xl bg-[#2d3748]/80 p-5 border border-white/10 shadow-lg flex-1">
+        {/* Edit Panel Drawer */}
+        {isEditingMessage && (
+          <div className="flex flex-col gap-2.5 rounded-2xl bg-[#2d3748] p-4 border border-white/10 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+            <label className="text-xs font-semibold text-zinc-300">Customize Prompt Message:</label>
+            <textarea 
+              value={cardMessage}
+              onChange={(e) => setCardMessage(e.target.value)}
+              placeholder="e.g. Send me a beautiful picture, send your thoughts..."
+              rows={2}
+              className="w-full bg-black/30 border border-white/10 text-white p-2.5 rounded-xl text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white resize-none"
+            />
+            <div className="flex items-center gap-2 justify-end">
+              <Button 
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setCardMessage('send me anonymous messages!');
+                }}
+                className="h-8 text-xs text-zinc-400 hover:text-white hover:bg-white/10"
+              >
+                Reset
+              </Button>
+              <Button 
+                size="sm"
+                onClick={() => setIsEditingMessage(false)}
+                className="h-8 text-xs bg-white text-zinc-900 hover:bg-zinc-200 font-semibold rounded-lg px-4"
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col items-center justify-center rounded-3xl bg-[#2d3748]/80 p-5 border border-white/10 shadow-lg">
           <span className="text-sm font-semibold text-zinc-400 mb-1">Step 1: Copy your link</span>
           <span className="text-xs font-bold tracking-wide text-zinc-200 mb-3 break-all text-center">{profileLink}</span>
           
@@ -222,13 +272,13 @@ export function DashboardClient({ token }: DashboardClientProps) {
           </Button>
         </div>
 
-        <div className="flex flex-col items-center justify-center rounded-3xl bg-[#2d3748]/80 p-5 border border-white/10 shadow-lg flex-1">
+        <div className="flex flex-col items-center justify-center rounded-3xl bg-[#2d3748]/80 p-5 border border-white/10 shadow-lg">
           <span className="text-sm font-semibold text-zinc-400 mb-3">Step 2: Share link on your story</span>
           
           <Button 
             onClick={() => {
               if (navigator.share) {
-                navigator.share({ title: 'KUSO', text: 'Send me anonymous messages!', url: profileLink });
+                navigator.share({ title: 'KUSO', text: cardMessage, url: profileLink });
               } else {
                 handleCopy();
               }

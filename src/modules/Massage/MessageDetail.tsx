@@ -222,7 +222,7 @@ export function MessageDetailClient({ slug, token }: MessageDetailClientProps) {
           {/* Top Header Card Half (Dynamic User Color) */}
           <div className={cn("flex items-center justify-center p-8 bg-linear-to-b text-center min-h-35 transition-colors duration-500", getBackgroundGradient(messageData.favoriteColor))}>
             <h2 className="text-2xl font-black tracking-tight text-white drop-shadow-sm">
-              send me anonymous messages!
+              Send me anonymous messages!
             </h2>
           </div>
 

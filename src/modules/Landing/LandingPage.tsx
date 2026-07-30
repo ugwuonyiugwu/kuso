@@ -24,6 +24,10 @@ export const HomePage = () => {
   const createUser = trpc.user.createUser.useMutation({
     onSuccess: (newUser) => {
       localStorage.setItem("kuso_token", newUser.secretToken);
+      
+      // Clear the session flag so the Ad popup triggers on the new session landing
+      sessionStorage.removeItem('ad_dashboard_shown');
+
       // Redirect to token-only dashboard route
       router.push(`/dashboard?token=${newUser.secretToken}`);
     },
@@ -44,6 +48,10 @@ export const HomePage = () => {
 
       if (user && user.secretToken) {
         localStorage.setItem("kuso_token", user.secretToken);
+        
+        // Clear the session flag so the Ad popup triggers on login
+        sessionStorage.removeItem('ad_dashboard_shown');
+
         // Redirect to token-only dashboard route
         router.push(`/dashboard?token=${user.secretToken}`);
       } else {
@@ -91,7 +99,7 @@ export const HomePage = () => {
             if (step === 'SIGN_IN' || step === 'COLOR') setStep('LANDING');
             if (step === 'USERNAME') setStep('COLOR');
           }} 
-          className="absolute left-6 top-6 z-20 text-white"
+          className="absolute left-6 top-6 z-20 text-white cursor-pointer"
         >
           <ChevronLeft size={32} />
         </button>
@@ -107,14 +115,14 @@ export const HomePage = () => {
           <div className="w-full max-w-sm pb-8 flex flex-col gap-4">
             <Button 
               onClick={() => setStep('COLOR')}
-              className="h-16 w-full rounded-full bg-white text-lg font-bold text-black shadow-lg transition-transform active:scale-95 hover:bg-gray-100"
+              className="h-16 w-full rounded-full bg-white text-lg font-bold text-black shadow-lg transition-transform active:scale-95 hover:bg-gray-100 cursor-pointer"
             >
               Get Started!
             </Button>
             <Button 
               onClick={() => setStep('SIGN_IN')}
               variant="outline"
-              className="h-16 w-full rounded-full border-white/30 bg-transparent text-lg font-bold text-white hover:bg-white/10"
+              className="h-16 w-full rounded-full border-white/30 bg-transparent text-lg font-bold text-white hover:bg-white/10 cursor-pointer"
             >
               I already have an account
             </Button>
@@ -145,7 +153,7 @@ export const HomePage = () => {
             <Button 
               disabled={!signInUsername.trim() || isSigningIn}
               onClick={handleSignIn}
-              className="h-16 w-full rounded-full bg-white text-lg font-bold text-black hover:bg-gray-200"
+              className="h-16 w-full rounded-full bg-white text-lg font-bold text-black hover:bg-gray-200 cursor-pointer disabled:opacity-50"
             >
               {isSigningIn ? "Signing In..." : "Sign In"}
             </Button>
@@ -169,7 +177,7 @@ export const HomePage = () => {
                 key={item.id}
                 onClick={() => setSelectedColor(item.id)}
                 className={cn(
-                  "flex h-22 items-center justify-center gap-6 rounded-full border-4 text-4xl font-bold transition-all text-white",
+                  "flex h-22 items-center justify-center gap-6 rounded-full border-4 text-4xl font-bold transition-all text-white cursor-pointer",
                   selectedColor === item.id 
                     ? "border-white bg-white/10" 
                     : "border-zinc-50 bg-white/5"
@@ -184,7 +192,7 @@ export const HomePage = () => {
             <Button 
               disabled={!selectedColor}
               onClick={() => setStep('USERNAME')}
-              className="h-16 w-full rounded-full bg-white text-lg font-bold text-black hover:bg-gray-200"
+              className="h-16 w-full rounded-full bg-white text-lg font-bold text-black hover:bg-gray-200 cursor-pointer disabled:opacity-50"
             >
               Continue
             </Button>
@@ -215,7 +223,7 @@ export const HomePage = () => {
             <Button 
               disabled={!username.trim() || createUser.isPending}
               onClick={handleFinalSubmit}
-              className="h-16 w-full rounded-full bg-white text-lg font-bold text-black hover:bg-gray-200"
+              className="h-16 w-full rounded-full bg-white text-lg font-bold text-black hover:bg-gray-200 cursor-pointer disabled:opacity-50"
             >
               {createUser.isPending ? "Saving..." : "Continue"}
             </Button>

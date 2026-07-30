@@ -2,7 +2,6 @@ import { HydrateClient, trpc } from "@/trpc/server";
 import { DashboardClient } from "@/modules/Dashboard/Dashboard";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
-import { notFound } from "next/navigation";
 
 interface PageProps {
   searchParams: Promise<{
@@ -17,7 +16,6 @@ export default async function DashboardPage(props: PageProps) {
   const searchParams = await props.searchParams;
   const params = props.params ? await props.params : {};
   
-  // Accept token from either query parameter or dynamic route parameter
   const token = searchParams.token || params.token;
 
   if (!token) {
@@ -31,11 +29,11 @@ export default async function DashboardPage(props: PageProps) {
     );
   }
 
+  // Safely await the prefetch without letting a failure crash the server render
   try {
     await trpc.user.getUserByToken.prefetch({ token });
   } catch (error) {
     console.error("Prefetch error:", error);
-    notFound();
   }
 
   return (

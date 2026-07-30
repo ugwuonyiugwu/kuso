@@ -49,7 +49,7 @@ export function InboxClient({ token }: InboxClientProps) {
       <header className="flex w-full max-w-sm items-center justify-between pt-2 pb-6 mb-15 my-5">
         <div className="flex gap-4">
           <Link 
-            href={`/${token}/dashboard`} 
+            href={`/dashboard?token=${token}`} 
             className="text-xl font-bold text-zinc-500 hover:text-zinc-300 transition-colors"
           >
             play

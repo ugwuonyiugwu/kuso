@@ -5,7 +5,7 @@ export const runtime = 'edge';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const username = searchParams.get('username') || 'Kudus';
+    const username = searchParams.get('username') || 'Kuso';
 
     return new ImageResponse(
       (
@@ -17,23 +17,25 @@ export async function GET(request: Request) {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(to bottom, #ec4899, #f97316)',
+            backgroundColor: '#1a202c',
             fontFamily: 'sans-serif',
           }}
         >
-          {/* Inner Card Graphic matching your brand */}
+          {/* Inner Card Graphic matching Kuso styling */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: 'white',
+              backgroundColor: '#2d3748',
               borderRadius: '40px',
               padding: '60px',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              border: '4px solid #3b82f6',
+              boxShadow: '0 25px 50px -12px rgba(59, 130, 246, 0.4)',
               width: '80%',
               height: '75%',
+              color: 'white',
             }}
           >
             {/* Avatar Circle */}
@@ -42,24 +44,25 @@ export async function GET(request: Request) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '100px',
-                height: '100px',
-                borderRadius: '50px',
-                backgroundColor: '#18181b',
+                width: '110px',
+                height: '110px',
+                borderRadius: '55px',
+                backgroundColor: '#2563eb',
                 color: 'white',
-                fontSize: '48px',
+                fontSize: '52px',
                 fontWeight: 'bold',
                 marginBottom: '20px',
+                boxShadow: '0 10px 25px rgba(37, 99, 235, 0.5)',
               }}
             >
               {username[0].toUpperCase()}
             </div>
 
-            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#18181b', marginBottom: '10px' }}>
+            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#94a3b8', marginBottom: '15px', textTransform: 'lowercase' }}>
               @{username}
             </div>
 
-            <div style={{ fontSize: '48px', fontWeight: '900', color: '#18181b', textAlign: 'center' }}>
+            <div style={{ fontSize: '48px', fontWeight: '900', color: 'white', textAlign: 'center', lineHeight: '1.2' }}>
               send me anonymous messages!
             </div>
           </div>
