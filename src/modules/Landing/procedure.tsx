@@ -1,6 +1,6 @@
 import { createTRPCRouter, baseProcedure } from "@/trpc/init";
 import { z } from "zod";
-import { users, messages } from "@/db/schema";
+import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
@@ -79,7 +79,7 @@ export const userRouter = createTRPCRouter({
       return user;
     }),
 
-  // Updated: Creates a new message row with a unique slug and updates the user's base prompt
+  // Updated: Only updates the user's profile customPrompt without creating a fake inbox message
   updatePrompt: baseProcedure
     .input(
       z.object({
@@ -100,24 +100,15 @@ export const userRouter = createTRPCRouter({
       }
 
       // Update user's current custom prompt
-      await ctx.db
+      const [updatedUser] = await ctx.db
         .update(users)
         .set({ customPrompt: input.prompt })
-        .where(eq(users.secretToken, input.token));
-
-      // Generate a new unique slug/token for this specific message prompt row
-      const newSlug = nanoid(10);
-
-      // Insert a brand new message row into the database table
-      const [newMessage] = await ctx.db.insert(messages).values({
-        userId: user.id,
-        promptContent: input.prompt,
-        slug: newSlug,
-      }).returning();
+        .where(eq(users.secretToken, input.token))
+        .returning();
 
       return {
-        slug: newMessage.slug,
-        promptContent: newMessage.promptContent,
+        success: true,
+        customPrompt: updatedUser.customPrompt,
       };
     }),
 

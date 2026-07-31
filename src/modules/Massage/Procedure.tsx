@@ -101,7 +101,6 @@ export const messageRouter = createTRPCRouter({
       return userMessages;
     }),
 
-  // 👉 Newly added query to fetch a single message by slug and include user's favorite color
   getMessageBySlug: publicProcedure
     .input(
       z.object({
