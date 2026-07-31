@@ -14,20 +14,23 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = "https://kuso-silk.vercel.app";
+const imageUrl = `${siteUrl}/opengraph-image.png`;
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://kuso-silk.vercel.app"),
+  metadataBase: new URL(siteUrl),
   title: "Anonymous messages!",
   description: "Anonymous Q&A and messages",
   openGraph: {
     title: "Anonymous messages!",
     description: "Send me anonymous messages!",
-    url: "https://kuso-silk.vercel.app",
+    url: siteUrl,
     siteName: "Kuso",
     images: [
       {
-        url: "/api/og",
+        url: imageUrl,
         width: 800,
-        height: 800, // Changed to square dimensions for the left-side thumbnail
+        height: 800,
         alt: "Kuso Anonymous Messages",
       },
     ],
@@ -35,10 +38,10 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary", // Changed from "summary_large_image" to "summary" to force the image on the left
+    card: "summary",
     title: "Anonymous messages!",
     description: "Send me anonymous messages!",
-    images: ["/api/og"],
+    images: [imageUrl],
   },
 };
 
