@@ -23,43 +23,19 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const searchParams = await props.searchParams;
   const params = props.params ? await props.params : {};
   const token = searchParams.token || params.token;
-
-  if (!token) {
-    return {
-      metadataBase: new URL(siteUrl),
-      title: "Anonymous messages!",
-      description: "Send me anonymous messages!",
-      openGraph: {
-        title: "Anonymous messages!",
-        description: "Send me anonymous messages!",
-        images: [{ url: `${siteUrl}/opengraph-image.png`, width: 800, height: 800, alt: "Anonymous Messages" }],
-        type: "website",
-      },
-      twitter: {
-        card: "summary",
-        title: "Anonymous messages!",
-        description: "Send me anonymous messages!",
-        images: [`${siteUrl}/opengraph-image.png`],
-      },
-    };
-  }
-
-  const user = await db.query.users.findFirst({
-    where: eq(users.secretToken, token),
-  });
-
-  const descriptionText = user?.username ? `Send anonymous messages to @${user.username}!` : "Send me anonymous messages!";
+  const imageUrl = `${siteUrl}/opengraph-image.png`;
 
   return {
     metadataBase: new URL(siteUrl),
     title: "Anonymous messages!",
-    description: descriptionText,
+    description: "Send me anonymous messages!",
     openGraph: {
       title: "Anonymous messages!",
-      description: descriptionText,
+      description: "Send me anonymous messages!",
+      url: token ? `${siteUrl}/dashboard?token=${token}` : siteUrl,
       images: [
         {
-          url: `${siteUrl}/opengraph-image.png`, // Absolute URL for WhatsApp scraper
+          url: imageUrl,
           width: 800,
           height: 800,
           alt: "Anonymous Messages",
@@ -68,10 +44,10 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
       type: "website",
     },
     twitter: {
-      card: "summary", // Forces the square image layout on the left side
+      card: "summary",
       title: "Anonymous messages!",
-      description: descriptionText,
-      images: [`${siteUrl}/opengraph-image.png`],
+      description: "Send me anonymous messages!",
+      images: [imageUrl],
     },
   };
 }
@@ -93,7 +69,6 @@ export default async function DashboardPage(props: PageProps) {
     );
   }
 
-  // Safely await the prefetch without letting a failure crash the server render
   try {
     await trpc.user.getUserByToken.prefetch({ token });
   } catch (error) {

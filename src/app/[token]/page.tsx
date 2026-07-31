@@ -9,37 +9,24 @@ interface PageProps {
   params: Promise<{ token: string }>;
 }
 
-// 1. Generate Dynamic Metadata for Link Previews
+const siteUrl = "https://kuso-silk.vercel.app";
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { token } = await params;
-
-  const [targetUser] = await db
-    .select()
-    .from(users)
-    .where(eq(users.secretToken, token))
-    .limit(1);
-
-  if (!targetUser) {
-    return {
-      title: "Anonymous messages!",
-      description: "Send me anonymous messages!",
-    };
-  }
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kuso-silk.vercel.app";
-  const displayName = targetUser.username || "User";
+  const imageUrl = `${siteUrl}/opengraph-image.png`;
 
   return {
+    metadataBase: new URL(siteUrl),
     title: "Anonymous messages!",
-    description: `Send anonymous messages to @${displayName}!`,
+    description: "Send me anonymous messages!",
     openGraph: {
       title: "Anonymous messages!",
-      description: `Send anonymous messages to @${displayName}!`,
+      description: "Send me anonymous messages!",
       url: `${siteUrl}/${token}`,
       siteName: "KUSO",
       images: [
         {
-          url: `${siteUrl}/opengraph-image.png`, // Absolute URL to your square image file
+          url: imageUrl,
           width: 800,
           height: 800,
           alt: "Anonymous Messages",
@@ -48,10 +35,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "website",
     },
     twitter: {
-      card: "summary", // Forces the square thumbnail to stay on the left side
+      card: "summary",
       title: "Anonymous messages!",
-      description: `Send anonymous messages to @${displayName}!`,
-      images: [`${siteUrl}/opengraph-image.png`],
+      description: "Send me anonymous messages!",
+      images: [imageUrl],
     },
   };
 }
