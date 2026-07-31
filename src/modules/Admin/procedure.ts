@@ -48,4 +48,24 @@ export const frameRouter = createTRPCRouter({
         where: eq(frames.id, input.id),
       });
     }),
+
+  // Added new procedure for storing short-link wish data
+  createWish: baseProcedure
+    .input(
+      z.object({
+        name: z.string().min(1),
+        message: z.string().min(1),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Adjust this block to fit your Drizzle schema model name for wishes
+      const [newWish] = await ctx.db.insert(frames).values({
+        title: input.name,       // Mapping name to title or your chosen field
+        content: input.message,  // Mapping message content
+        type: "new-month-wish",  // Categorizing type
+        imageUrl: "/frame.jpg",  // Default card frame image
+      }).returning({ id: frames.id });
+
+      return { id: newWish.id };
+    }),
 });

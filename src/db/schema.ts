@@ -35,3 +35,10 @@ export const siteSettings = pgTable("site_settings", {
   isActive: boolean("is_active").default(true).notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const newMonthWishes = pgTable("new_month_wishes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

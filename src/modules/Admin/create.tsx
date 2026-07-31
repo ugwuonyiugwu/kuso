@@ -4,17 +4,19 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, Edit3, X } from 'lucide-react';
+import { MessageCircle, Edit3, X, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface NewMonthWishClientProps {
   initialName?: string;
   initialMessage?: string;
+  initialId?: number;
 }
 
 export function NewMonthWishClient({ 
   initialName, 
-  initialMessage = "may the almighty go ahead of you, smoothing every rough path and turning your silent prayers into loud testimonies. happy new month!" 
+  initialMessage = "may the almighty go ahead of you, smoothing every rough path and turning your silent prayers into loud testimonies. happy new month!",
+  initialId
 }: NewMonthWishClientProps) {
   const searchParams = useSearchParams();
   const nameParam = searchParams.get('name');
@@ -24,6 +26,7 @@ export function NewMonthWishClient({
   const [message, setMessage] = useState(messageParam || initialMessage);
   const [isEditing, setIsEditing] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Slower opening doors/zip animation (600ms delay, 1500ms duration)
   useEffect(() => {
@@ -33,27 +36,56 @@ export function NewMonthWishClient({
     return () => clearTimeout(timer);
   }, []);
 
-  const getShareableLink = () => {
+  const handleWhatsAppShare = async () => {
+    try {
+      setIsSaving(true);
+
+      // Save the wish data to your database via an API route or server action
+      const response = await fetch('/api/frames/wish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: name.trim() || 'Friend',
+          content: message.trim(),
+          type: 'new-month-wish',
+          imageUrl: '/frame.jpg',
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to save wish');
+
+      const data = await response.json();
+      const wishId = data?.id;
+
+      // Build a clean short link using the numeric record ID (e.g., /wish/5)
+      const baseUrl = window.location.origin;
+      const shortLink = wishId ? `${baseUrl}/wish/${wishId}` : getFallbackLink();
+
+      sessionStorage.setItem('ad_whatsapp_triggered', 'true');
+      window.dispatchEvent(new Event('whatsapp_shared'));
+
+      const text = encodeURIComponent(`Check out this new month message prepared for you! ✨\n\n${shortLink}`);
+      window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+    } catch (error) {
+      console.error('Error sharing to WhatsApp:', error);
+      // Fallback to query parameter sharing if database request fails
+      const fallbackLink = getFallbackLink();
+      const text = encodeURIComponent(`Check out this new month message prepared for you! ✨\n\n${fallbackLink}`);
+      window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const getFallbackLink = () => {
     if (typeof window === 'undefined') return '';
     const baseUrl = `${window.location.origin}${window.location.pathname}`;
     const params = new URLSearchParams();
-    
     params.set('name', name.trim() || 'Friend');
-    
     if (message.trim() && message.trim() !== initialMessage) {
       params.set('message', message.trim());
     }
-    
     return `${baseUrl}?${params.toString()}`;
-  };
-
-  const handleWhatsAppShare = () => {
-    sessionStorage.setItem('ad_whatsapp_triggered', 'true');
-    window.dispatchEvent(new Event('whatsapp_shared'));
-
-    const link = getShareableLink();
-    const text = encodeURIComponent(`Check out this new month message prepared for you! ✨\n\n${link}`);
-    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
   return (
@@ -147,10 +179,11 @@ export function NewMonthWishClient({
           <div className="flex items-center gap-2 pt-1">
             <Button 
               onClick={handleWhatsAppShare}
+              disabled={isSaving}
               className="h-9 flex-1 rounded-full bg-green-600 hover:bg-green-700 text-white font-semibold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
             >
-              <MessageCircle size={14} className="fill-white" />
-              WhatsApp
+              {isSaving ? <Loader2 size={14} className="animate-spin" /> : <MessageCircle size={14} className="fill-white" />}
+              {isSaving ? "Saving..." : "WhatsApp"}
             </Button>
 
             <Link
