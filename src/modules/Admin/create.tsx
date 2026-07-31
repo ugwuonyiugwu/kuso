@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageCircle, Edit3, X, Loader2 } from 'lucide-react';
@@ -26,7 +27,9 @@ export function NewMonthWishClient({
   const [message, setMessage] = useState(messageParam || initialMessage);
   const [isEditing, setIsEditing] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+
+  // tRPC mutation pointing to frameRouter's createWish procedure
+  const createWishMutation = trpc.frame.createWish.useMutation();
 
   // Slower opening doors/zip animation (600ms delay, 1500ms duration)
   useEffect(() => {
@@ -38,26 +41,15 @@ export function NewMonthWishClient({
 
   const handleWhatsAppShare = async () => {
     try {
-      setIsSaving(true);
-
-      // Save the wish data to your database via an API route or server action
-      const response = await fetch('/api/frames/wish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: name.trim() || 'Friend',
-          content: message.trim(),
-          type: 'new-month-wish',
-          imageUrl: '/frame.jpg',
-        }),
+      // Save data via tRPC mutation to get a short database ID
+      const result = await createWishMutation.mutateAsync({
+        name: name.trim() || 'Friend',
+        message: message.trim(),
       });
 
-      if (!response.ok) throw new Error('Failed to save wish');
+      const wishId = result?.id;
 
-      const data = await response.json();
-      const wishId = data?.id;
-
-      // Build a clean short link using the numeric record ID (e.g., /wish/5)
+      // Build a clean short link using the database record ID
       const baseUrl = window.location.origin;
       const shortLink = wishId ? `${baseUrl}/wish/${wishId}` : getFallbackLink();
 
@@ -67,13 +59,11 @@ export function NewMonthWishClient({
       const text = encodeURIComponent(`Check out this new month message prepared for you! ✨\n\n${shortLink}`);
       window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
     } catch (error) {
-      console.error('Error sharing to WhatsApp:', error);
+      console.error('Error sharing to WhatsApp via tRPC:', error);
       // Fallback to query parameter sharing if database request fails
       const fallbackLink = getFallbackLink();
       const text = encodeURIComponent(`Check out this new month message prepared for you! ✨\n\n${fallbackLink}`);
       window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -94,12 +84,12 @@ export function NewMonthWishClient({
       {/* Slower Door / Zip Opening Overlay Panels (1.5s duration) */}
       <div className={`absolute inset-y-0 left-0 w-1/2 bg-[#2d3748] z-30 transition-transform duration-1500 ease-in-out ${isOpen ? '-translate-x-full' : 'translate-x-0'} flex items-center justify-end border-r border-amber-400/30 shadow-2xl`}>
         <div className="absolute right-3 text-amber-300 animate-pulse font-serif italic text-xs tracking-widest uppercase opacity-70">
-          ✨ Welcome
+          ✨ Welcome To
         </div>
       </div>
       <div className={`absolute inset-y-0 right-0 w-1/2 bg-[#2d3748] z-30 transition-transform duration-1500 ease-in-out ${isOpen ? 'translate-x-full' : 'translate-x-0'} flex items-center justify-start border-l border-amber-400/30 shadow-2xl`}>
         <div className="absolute left-3 text-amber-300 animate-pulse font-serif italic text-xs tracking-widest uppercase opacity-70">
-          New Month 🌸
+          New July 🌸
         </div>
       </div>
 
@@ -179,11 +169,11 @@ export function NewMonthWishClient({
           <div className="flex items-center gap-2 pt-1">
             <Button 
               onClick={handleWhatsAppShare}
-              disabled={isSaving}
+              disabled={createWishMutation.isPending}
               className="h-9 flex-1 rounded-full bg-green-600 hover:bg-green-700 text-white font-semibold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
             >
-              {isSaving ? <Loader2 size={14} className="animate-spin" /> : <MessageCircle size={14} className="fill-white" />}
-              {isSaving ? "Saving..." : "WhatsApp"}
+              {createWishMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <MessageCircle size={14} className="fill-white" />}
+              {createWishMutation.isPending ? "Saving..." : "WhatsApp"}
             </Button>
 
             <Link
