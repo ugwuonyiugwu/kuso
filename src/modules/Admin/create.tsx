@@ -120,7 +120,7 @@ export function NewMonthWishClient({
             Dear {name},
           </p>
           {/* Added whitespace-pre-wrap to respect new lines and spacing */}
-          <p className="text-[11px] md:text-xs font-medium leading-relaxed text-zinc-100 italic drop-shadow overflow-y-auto whitespace-pre-wrap max-h-[55%]">
+          <p className="text-[11px] md:text-xs font-medium leading-relaxed text-zinc-100 italic drop-shadow overflow-y-auto whitespace-pre-wrap max-h-[70%]">
             {message}
           </p>
         </div>
