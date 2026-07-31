@@ -19,18 +19,33 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   let dynamicDescription = "Send me an anonymous message!";
 
   try {
-    // Query the messages table using the route token/slug to get the specific prompt row
+    // 1. First, check if the parameter is a message slug (created via updatePrompt)
     const [targetMessage] = await db
-      .select()
+      .select({
+        promptContent: messages.promptContent,
+      })
       .from(messages)
       .where(eq(messages.slug, token))
       .limit(1);
 
     if (targetMessage?.promptContent) {
       dynamicTitle = targetMessage.promptContent;
+    } else {
+      // 2. Otherwise, fall back to checking if it's a base user secret token
+      const [userRecord] = await db
+        .select({
+          customPrompt: users.customPrompt,
+        })
+        .from(users)
+        .where(eq(users.secretToken, token))
+        .limit(1);
+
+      if (userRecord?.customPrompt) {
+        dynamicTitle = userRecord.customPrompt;
+      }
     }
   } catch (error) {
-    console.error("Error fetching metadata message prompt:", error);
+    console.error("Error fetching metadata custom prompt:", error);
   }
 
   return {
@@ -64,10 +79,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function SendMessagePage({ params }: PageProps) {
   const { token } = await params;
 
-  // Fetch the message and its associated user via an inner join
-  const result = await db
+  // Try fetching as a message slug first, joining with the user
+  let result = await db
     .select({
-      message: messages,
+      messagePrompt: messages.promptContent,
       user: users,
     })
     .from(messages)
@@ -75,17 +90,36 @@ export default async function SendMessagePage({ params }: PageProps) {
     .where(eq(messages.slug, token))
     .limit(1);
 
-  const data = result[0];
+  let username = "";
+  let favoriteColor = "pink";
+  let promptContent = "Anonymous messages!";
 
-  if (!data) {
-    notFound();
+  if (result.length > 0) {
+    username = result[0].user.username;
+    favoriteColor = result[0].user.favoriteColor || "pink";
+    promptContent = result[0].messagePrompt;
+  } else {
+    // Fall back to looking up directly by user secretToken if no message slug matches
+    const [userRecord] = await db
+      .select()
+      .from(users)
+      .where(eq(users.secretToken, token))
+      .limit(1);
+
+    if (!userRecord) {
+      notFound();
+    }
+
+    username = userRecord.username;
+    favoriteColor = userRecord.favoriteColor || "pink";
+    promptContent = userRecord.customPrompt;
   }
 
   return (
     <SendMessageClient 
-      username={data.user.username} 
-      favoriteColor={data.user.favoriteColor || "pink"} 
-      promptContent={data.message.promptContent}
+      username={username} 
+      favoriteColor={favoriteColor} 
+      promptContent={promptContent}
     />
   );
 }
