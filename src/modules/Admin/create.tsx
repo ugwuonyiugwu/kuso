@@ -56,13 +56,14 @@ export function NewMonthWishClient({
       sessionStorage.setItem('ad_whatsapp_triggered', 'true');
       window.dispatchEvent(new Event('whatsapp_shared'));
 
-      const text = encodeURIComponent(`Check out this new month message prepared for you! ✨\n\n${shortLink}`);
+      // Clean NGL Style: Send ONLY the URL so WhatsApp displays only the rich preview card
+      const text = encodeURIComponent(shortLink);
       window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
     } catch (error) {
       console.error('Error sharing to WhatsApp via tRPC:', error);
-      // Fallback to query parameter sharing if database request fails
+      // Fallback sharing link
       const fallbackLink = getFallbackLink();
-      const text = encodeURIComponent(`Check out this new month message prepared for you! ✨\n\n${fallbackLink}`);
+      const text = encodeURIComponent(fallbackLink);
       window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
     }
   };
@@ -89,11 +90,11 @@ export function NewMonthWishClient({
       </div>
       <div className={`absolute inset-y-0 right-0 w-1/2 bg-[#2d3748] z-30 transition-transform duration-1500 ease-in-out ${isOpen ? 'translate-x-full' : 'translate-x-0'} flex items-center justify-start border-l border-amber-400/30 shadow-2xl`}>
         <div className="absolute left-3 text-amber-300 animate-pulse font-serif italic text-xs tracking-widest uppercase opacity-70">
-         July 🌸
+          July 🌸
         </div>
       </div>
 
-      {/* Falling Flowers Animation / Accumulating on the Floor */}
+      {/* Falling Flowers Animation */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
         <div className="absolute top-0 left-[15%] text-lg animate-[fall_4s_ease-in-out_infinite] opacity-90">🌸</div>
         <div className="absolute top-0 left-[35%] text-base animate-[fall_5s_ease-in-out_1s_infinite] opacity-90">🌷</div>
@@ -119,13 +120,12 @@ export function NewMonthWishClient({
           <p className="text-base md:text-lg italic font-serif text-amber-200 pl-7 mb-2 drop-shadow animate-bounce shrink-0 truncate">
             Dear {name},
           </p>
-          {/* Added whitespace-pre-wrap to respect new lines and spacing */}
           <p className="text-[11px] md:text-xs font-medium leading-relaxed text-zinc-100 italic drop-shadow overflow-y-auto whitespace-pre-wrap max-h-[70%]">
             {message}
           </p>
         </div>
 
-        {/* Accumulated Flower Floor at the Bottom Inside the Frame Area */}
+        {/* Accumulated Flower Floor */}
         <div className="absolute bottom-6 inset-x-8 h-6 flex items-end justify-around z-20 pointer-events-none text-sm opacity-95">
           <span>🌸</span><span>🌷</span><span>🌸</span><span>🌺</span><span>🌷</span><span>🌸</span><span>🌺</span><span>🌷</span>
         </div>
