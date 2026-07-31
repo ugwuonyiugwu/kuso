@@ -17,52 +17,36 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (isNaN(numericId)) {
     return {
-      title: "New Month Wish",
-      description: "Check out this new month message prepared for you!",
+      title: "New Month Wishes",
+      description: "New Month Wishes",
     };
   }
 
-  // Fetch the specific wish data from Drizzle
   const wish = await db.query.frames.findFirst({
     where: eq(frames.id, numericId),
   });
 
   if (!wish) {
     return {
-      title: "New Month Wish",
-      description: "Check out this new month message prepared for you!",
+      title: "New Month Wishes",
+      description: "New Month Wishes",
     };
   }
 
   const recipientName = wish.title || "Friend";
-  const messagePreview = wish.content ? wish.content.slice(0, 100) + "..." : "Happy new month!";
-
-  // Points directly to your app/opengraph-image.png file route
-  const imageUrl = "/opengraph-image.png";
 
   return {
-    title: `New Month Wish for ${recipientName} ✨`,
-    description: messagePreview,
+    title: `New Month Wishes`,
+    description: `New Month Wish for ${recipientName}`,
     openGraph: {
-      title: `New Month Wish for ${recipientName} ✨`,
-      description: messagePreview,
-      url: `/wish/${id}`,
-      siteName: "KUSO",
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: "New Month Greeting Card",
-        },
-      ],
+      title: "New Month Wishes",
+      description: `New Month Wish for ${recipientName}`,
       type: "website",
     },
     twitter: {
-      card: "summary_large_image",
-      title: `New Month Wish for ${recipientName} ✨`,
-      description: messagePreview,
-      images: [imageUrl],
+      card: "summary",
+      title: "New Month Wishes",
+      description: `New Month Wish for ${recipientName}`,
     },
   };
 }
