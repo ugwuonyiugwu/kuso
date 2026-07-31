@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://kuso-silk.vercel.app"),
-  title: "Send me anonymous messages!",
+  title: "Anonymous messages!",
   description: "Anonymous Q&A and messages",
   openGraph: {
     title: "Anonymous messages!",
@@ -26,8 +26,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/api/og",
-        width: 1200,
-        height: 630,
+        width: 800,
+        height: 800, // Changed to square dimensions for the left-side thumbnail
         alt: "Kuso Anonymous Messages",
       },
     ],
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary", // Changed from "summary_large_image" to "summary" to force the image on the left
     title: "Anonymous messages!",
     description: "Send me anonymous messages!",
     images: ["/api/og"],

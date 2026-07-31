@@ -84,6 +84,11 @@ export function DashboardClient({ token }: DashboardClientProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleWhatsAppShare = () => {
+    const text = encodeURIComponent(profileLink);
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+  };
+
   const getColorGlowStyles = (color?: string) => {
     switch (color?.toLowerCase()) {
       case 'pink':
@@ -276,13 +281,7 @@ export function DashboardClient({ token }: DashboardClientProps) {
           <span className="text-sm font-semibold text-zinc-400 mb-3">Step 2: Share link on your story</span>
           
           <Button 
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({ title: 'KUSO', text: cardMessage, url: profileLink });
-              } else {
-                handleCopy();
-              }
-            }}
+            onClick={handleWhatsAppShare}
             className={cn(
               "h-12 w-full rounded-full bg-linear-to-r text-base font-extrabold text-white shadow-lg transition-transform active:scale-95 hover:opacity-90",
               getColorGlowStyles(user?.favoriteColor)
