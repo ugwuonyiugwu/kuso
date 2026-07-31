@@ -15,23 +15,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { token } = await params;
   const imageUrl = `${siteUrl}/opengraph-image.png`;
 
-  // 1. Find the user by secretToken and get their customPrompt
-  const [targetUser] = await db
-    .select()
-    .from(users)
-    .where(eq(users.secretToken, token))
-    .limit(1);
+  let dynamicTitle = "Anonymous messages!";
+  let dynamicDescription = "Send me an anonymous message!";
 
-  if (!targetUser) {
-    return {
-      title: "Anonymous messages!",
-      description: "Send me anonymous messages!",
-    };
+  try {
+    // Find the user by secretToken and get their customPrompt safely
+    const [targetUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.secretToken, token))
+      .limit(1);
+
+    if (targetUser?.customPrompt) {
+      dynamicTitle = targetUser.customPrompt;
+    }
+  } catch (error) {
+    console.error("Error fetching metadata prompt:", error);
   }
-
-  // 2. Use the user's saved customPrompt as the dynamic title/heading
-  const dynamicTitle = targetUser.customPrompt || "Anonymous messages!";
-  const dynamicDescription = "Send me an anonymous message or drop your thoughts!";
 
   return {
     metadataBase: new URL(siteUrl),
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "website",
     },
     twitter: {
-      card: "summary",
+      card: "summary", // Forces the square thumbnail layout strictly to the left side
       title: dynamicTitle,
       description: dynamicDescription,
       images: [imageUrl],
