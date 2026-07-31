@@ -25,13 +25,32 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const token = searchParams.token || params.token;
   const imageUrl = `${siteUrl}/opengraph-image.png`;
 
+  let dynamicTitle = "Anonymous messages!";
+  let dynamicDescription = "Send me an anonymous message!";
+
+  if (token) {
+    try {
+      const [targetUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.secretToken, token))
+        .limit(1);
+
+      if (targetUser?.customPrompt) {
+        dynamicTitle = targetUser.customPrompt;
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard metadata prompt:", error);
+    }
+  }
+
   return {
     metadataBase: new URL(siteUrl),
-    title: "Anonymous messages!",
-    description: "Send me anonymous messages!",
+    title: dynamicTitle,
+    description: dynamicDescription,
     openGraph: {
-      title: "Anonymous messages!",
-      description: "Send me anonymous messages!",
+      title: dynamicTitle,
+      description: dynamicDescription,
       url: token ? `${siteUrl}/dashboard?token=${token}` : siteUrl,
       images: [
         {
@@ -45,8 +64,8 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
     },
     twitter: {
       card: "summary",
-      title: "Anonymous messages!",
-      description: "Send me anonymous messages!",
+      title: dynamicTitle,
+      description: dynamicDescription,
       images: [imageUrl],
     },
   };
