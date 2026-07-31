@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { messages, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { SendMessageClient } from "@/modules/Massage/SendMassage";
@@ -19,18 +19,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   let dynamicDescription = "Send me an anonymous message!";
 
   try {
-    // Query the users table using secretToken since your dashboard updates users.customPrompt
-    const [userRecord] = await db
+    // Query the messages table using the route token/slug to get the specific prompt row
+    const [targetMessage] = await db
       .select()
-      .from(users)
-      .where(eq(users.secretToken, token))
+      .from(messages)
+      .where(eq(messages.slug, token))
       .limit(1);
 
-    if (userRecord?.customPrompt) {
-      dynamicTitle = userRecord.customPrompt;
+    if (targetMessage?.promptContent) {
+      dynamicTitle = targetMessage.promptContent;
     }
   } catch (error) {
-    console.error("Error fetching metadata custom prompt:", error);
+    console.error("Error fetching metadata message prompt:", error);
   }
 
   return {
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "website",
     },
     twitter: {
-      card: "summary", // Forces the square image to lock on the left side
+      card: "summary",
       title: dynamicTitle,
       description: dynamicDescription,
       images: [imageUrl],
@@ -64,13 +64,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function SendMessagePage({ params }: PageProps) {
   const { token } = await params;
 
-  // Fetch user data securely by token
+  // Fetch the message and its associated user via an inner join
   const result = await db
     .select({
+      message: messages,
       user: users,
     })
-    .from(users)
-    .where(eq(users.secretToken, token))
+    .from(messages)
+    .innerJoin(users, eq(messages.userId, users.id))
+    .where(eq(messages.slug, token))
     .limit(1);
 
   const data = result[0];
@@ -83,7 +85,7 @@ export default async function SendMessagePage({ params }: PageProps) {
     <SendMessageClient 
       username={data.user.username} 
       favoriteColor={data.user.favoriteColor || "pink"} 
-      promptContent={data.user.customPrompt || "Anonymous messages!"}
+      promptContent={data.message.promptContent}
     />
   );
 }

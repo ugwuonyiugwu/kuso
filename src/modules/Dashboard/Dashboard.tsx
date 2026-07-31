@@ -32,10 +32,14 @@ export function DashboardClient({ token }: DashboardClientProps) {
     { enabled: isMounted && Boolean(token) }
   );
 
-  // tRPC mutation to save the updated custom prompt to PostgreSQL
+  // tRPC mutation to create a new message row in PostgreSQL when prompt updates
   const updatePromptMutation = trpc.user.updatePrompt.useMutation({
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       refetch();
+      // If your backend returns the new slug/message record, update the link to point to it directly:
+      if (data?.slug && typeof window !== 'undefined') {
+        setProfileLink(`${window.location.origin}/${data.slug}`);
+      }
     },
   });
 
@@ -46,6 +50,7 @@ export function DashboardClient({ token }: DashboardClientProps) {
         setCardMessage(user.customPrompt);
       }
       if (typeof window !== 'undefined') {
+        // Default to base secretToken link on initial load
         const baseUrl = `${window.location.origin}/${user.secretToken}`;
         setProfileLink(baseUrl);
       }
@@ -92,8 +97,7 @@ export function DashboardClient({ token }: DashboardClientProps) {
   };
 
   const handleWhatsAppShare = () => {
-    const cleanShareLink = `${window.location.origin}/${user.secretToken}`;
-    const text = encodeURIComponent(cleanShareLink);
+    const text = encodeURIComponent(profileLink);
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 

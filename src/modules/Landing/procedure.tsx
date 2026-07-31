@@ -1,6 +1,6 @@
 import { createTRPCRouter, baseProcedure } from "@/trpc/init";
 import { z } from "zod";
-import { users } from "@/db/schema";
+import { users, messages } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
@@ -79,7 +79,7 @@ export const userRouter = createTRPCRouter({
       return user;
     }),
 
-  // NEW: Update user custom card prompt/heading
+  // Updated: Creates a new message row with a unique slug and updates the user's base prompt
   updatePrompt: baseProcedure
     .input(
       z.object({
@@ -88,20 +88,37 @@ export const userRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const [updatedUser] = await ctx.db
-        .update(users)
-        .set({ customPrompt: input.prompt })
-        .where(eq(users.secretToken, input.token))
-        .returning();
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.secretToken, input.token),
+      });
 
-      if (!updatedUser) {
+      if (!user) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "User not found or invalid token.",
         });
       }
 
-      return updatedUser;
+      // Update user's current custom prompt
+      await ctx.db
+        .update(users)
+        .set({ customPrompt: input.prompt })
+        .where(eq(users.secretToken, input.token));
+
+      // Generate a new unique slug/token for this specific message prompt row
+      const newSlug = nanoid(10);
+
+      // Insert a brand new message row into the database table
+      const [newMessage] = await ctx.db.insert(messages).values({
+        userId: user.id,
+        promptContent: input.prompt,
+        slug: newSlug,
+      }).returning();
+
+      return {
+        slug: newMessage.slug,
+        promptContent: newMessage.promptContent,
+      };
     }),
 
   getSecureDashboard: baseProcedure
