@@ -16,6 +16,8 @@ interface PageProps {
   }>;
 }
 
+const siteUrl = "https://kuso-silk.vercel.app";
+
 // Generate dynamic metadata for the dashboard page preview
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const searchParams = await props.searchParams;
@@ -24,8 +26,21 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 
   if (!token) {
     return {
+      metadataBase: new URL(siteUrl),
       title: "Anonymous messages!",
       description: "Send me anonymous messages!",
+      openGraph: {
+        title: "Anonymous messages!",
+        description: "Send me anonymous messages!",
+        images: [{ url: `${siteUrl}/opengraph-image.png`, width: 800, height: 800, alt: "Anonymous Messages" }],
+        type: "website",
+      },
+      twitter: {
+        card: "summary",
+        title: "Anonymous messages!",
+        description: "Send me anonymous messages!",
+        images: [`${siteUrl}/opengraph-image.png`],
+      },
     };
   }
 
@@ -33,18 +48,30 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
     where: eq(users.secretToken, token),
   });
 
+  const descriptionText = user?.username ? `Send anonymous messages to @${user.username}!` : "Send me anonymous messages!";
+
   return {
+    metadataBase: new URL(siteUrl),
     title: "Anonymous messages!",
-    description: "Send me anonymous messages!",
+    description: descriptionText,
     openGraph: {
       title: "Anonymous messages!",
-      description: "Send me anonymous messages!",
+      description: descriptionText,
+      images: [
+        {
+          url: `${siteUrl}/opengraph-image.png`, // Absolute URL for WhatsApp scraper
+          width: 800,
+          height: 800,
+          alt: "Anonymous Messages",
+        },
+      ],
       type: "website",
     },
     twitter: {
-      card: "summary",
+      card: "summary", // Forces the square image layout on the left side
       title: "Anonymous messages!",
-      description: "Send me anonymous messages!",
+      description: descriptionText,
+      images: [`${siteUrl}/opengraph-image.png`],
     },
   };
 }
