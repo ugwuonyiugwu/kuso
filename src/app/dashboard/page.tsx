@@ -2,6 +2,10 @@ import { HydrateClient, trpc } from "@/trpc/server";
 import { DashboardClient } from "@/modules/Dashboard/Dashboard";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { Metadata } from "next";
 
 interface PageProps {
   searchParams: Promise<{
@@ -10,6 +14,39 @@ interface PageProps {
   params?: Promise<{
     token?: string;
   }>;
+}
+
+// Generate dynamic metadata for the dashboard page preview
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const searchParams = await props.searchParams;
+  const params = props.params ? await props.params : {};
+  const token = searchParams.token || params.token;
+
+  if (!token) {
+    return {
+      title: "Anonymous messages!",
+      description: "Send me anonymous messages!",
+    };
+  }
+
+  const user = await db.query.users.findFirst({
+    where: eq(users.secretToken, token),
+  });
+
+  return {
+    title: "Anonymous messages!",
+    description: "Send me anonymous messages!",
+    openGraph: {
+      title: "Anonymous messages!",
+      description: "Send me anonymous messages!",
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title: "Anonymous messages!",
+      description: "Send me anonymous messages!",
+    },
+  };
 }
 
 export default async function DashboardPage(props: PageProps) {

@@ -11,7 +11,7 @@ import Link from 'next/link';
 interface NewMonthWishClientProps {
   initialName?: string;
   initialMessage?: string;
-  initialId?: number;
+  initialId?: string;
 }
 
 export function NewMonthWishClient({ 
