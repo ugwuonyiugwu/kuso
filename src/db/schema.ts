@@ -6,6 +6,7 @@ export const users = pgTable("users", {
   secretToken: text("secret_token").notNull(),
   role: text("role").default("user").notNull(),
   favoriteColor: text("favorite_color").notNull(),
+  customPrompt: text("custom_prompt").default("Anonymous messages!").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

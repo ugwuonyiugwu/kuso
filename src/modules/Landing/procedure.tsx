@@ -33,6 +33,7 @@ export const userRouter = createTRPCRouter({
         favoriteColor: input.color,
         role: input.role ?? "user",
         secretToken: secretToken,
+        customPrompt: "Anonymous messages!",
       }).returning();
 
       return newUser;
@@ -56,7 +57,7 @@ export const userRouter = createTRPCRouter({
       return user;
     }),
 
-  // NEW: Lookup user directly by secret token for token-only dashboard access
+  // Lookup user directly by secret token for token-only dashboard access
   getUserByToken: baseProcedure
     .input(
       z.object({
@@ -76,6 +77,31 @@ export const userRouter = createTRPCRouter({
       }
 
       return user;
+    }),
+
+  // NEW: Update user custom card prompt/heading
+  updatePrompt: baseProcedure
+    .input(
+      z.object({
+        token: z.string(),
+        prompt: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [updatedUser] = await ctx.db
+        .update(users)
+        .set({ customPrompt: input.prompt })
+        .where(eq(users.secretToken, input.token))
+        .returning();
+
+      if (!updatedUser) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found or invalid token.",
+        });
+      }
+
+      return updatedUser;
     }),
 
   getSecureDashboard: baseProcedure

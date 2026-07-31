@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { users, messages } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { SendMessageClient } from "@/modules/Massage/SendMassage";
 import { Metadata } from "next";
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { token } = await params;
   const imageUrl = `${siteUrl}/opengraph-image.png`;
 
-  // 1. Find the user by secretToken
+  // 1. Find the user by secretToken and get their customPrompt
   const [targetUser] = await db
     .select()
     .from(users)
@@ -29,16 +29,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  // 2. Fetch their latest message/prompt from the messages table
-  const [latestMessage] = await db
-    .select()
-    .from(messages)
-    .where(eq(messages.userId, targetUser.id))
-    .orderBy(desc(messages.createdAt))
-    .limit(1);
-
-  // Use the latest prompt content as the title if it exists, otherwise use a safe default
-  const dynamicTitle = latestMessage?.promptContent || "Anonymous messages!";
+  // 2. Use the user's saved customPrompt as the dynamic title/heading
+  const dynamicTitle = targetUser.customPrompt || "Anonymous messages!";
   const dynamicDescription = "Send me an anonymous message or drop your thoughts!";
 
   return {

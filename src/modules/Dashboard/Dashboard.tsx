@@ -18,7 +18,7 @@ export function DashboardClient({ token }: DashboardClientProps) {
   const [profileLink, setProfileLink] = useState('');
   
   // States for editable card prompt message
-  const [cardMessage, setCardMessage] = useState('send me anonymous messages!');
+  const [cardMessage, setCardMessage] = useState('Anonymous messages!');
   const [isEditingMessage, setIsEditingMessage] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
@@ -27,23 +27,30 @@ export function DashboardClient({ token }: DashboardClientProps) {
     setIsMounted(true);
   }, []);
 
-  const { data: user, error, isLoading } = trpc.user.getUserByToken.useQuery(
+  const { data: user, error, isLoading, refetch } = trpc.user.getUserByToken.useQuery(
     { token },
     { enabled: isMounted && Boolean(token) }
   );
 
+  // tRPC mutation to save the updated custom prompt to PostgreSQL
+  const updatePromptMutation = trpc.user.updatePrompt.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
+  // Sync state with user data from the database once loaded
   useEffect(() => {
-    if (user && typeof window !== 'undefined') {
-      const baseUrl = `${window.location.origin}/${user.secretToken}`;
-      const params = new URLSearchParams();
-      if (cardMessage !== 'send me anonymous messages!') {
-        params.set('msg', cardMessage);
-        setProfileLink(`${baseUrl}?${params.toString()}`);
-      } else {
+    if (user) {
+      if (user.customPrompt) {
+        setCardMessage(user.customPrompt);
+      }
+      if (typeof window !== 'undefined') {
+        const baseUrl = `${window.location.origin}/${user.secretToken}`;
         setProfileLink(baseUrl);
       }
     }
-  }, [user, cardMessage]);
+  }, [user]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -85,7 +92,6 @@ export function DashboardClient({ token }: DashboardClientProps) {
   };
 
   const handleWhatsAppShare = () => {
-    // Send only the clean base profile link so WhatsApp properly loads the OpenGraph preview card
     const cleanShareLink = `${window.location.origin}/${user.secretToken}`;
     const text = encodeURIComponent(cleanShareLink);
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
@@ -239,7 +245,7 @@ export function DashboardClient({ token }: DashboardClientProps) {
                 size="sm"
                 variant="ghost"
                 onClick={() => {
-                  setCardMessage('send me anonymous messages!');
+                  setCardMessage('Anonymous messages!');
                 }}
                 className="h-8 text-xs text-zinc-400 hover:text-white hover:bg-white/10"
               >
@@ -247,10 +253,14 @@ export function DashboardClient({ token }: DashboardClientProps) {
               </Button>
               <Button 
                 size="sm"
-                onClick={() => setIsEditingMessage(false)}
+                disabled={updatePromptMutation.isPending}
+                onClick={() => {
+                  setIsEditingMessage(false);
+                  updatePromptMutation.mutate({ token, prompt: cardMessage });
+                }}
                 className="h-8 text-xs bg-white text-zinc-900 hover:bg-zinc-200 font-semibold rounded-lg px-4"
               >
-                Done
+                {updatePromptMutation.isPending ? "Saving..." : "Done"}
               </Button>
             </div>
           </div>
