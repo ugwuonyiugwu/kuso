@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { messages, users } from "@/db/schema";
+import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { SendMessageClient } from "@/modules/Massage/SendMassage";
@@ -12,24 +12,25 @@ interface PageProps {
 const siteUrl = "https://kuso-silk.vercel.app";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { token: slug } = await params;
+  const { token } = await params;
   const imageUrl = `${siteUrl}/opengraph-image.png`;
 
   let dynamicTitle = "Anonymous messages!";
   let dynamicDescription = "Send me an anonymous message!";
 
   try {
-    const [targetMessage] = await db
+    // Query the users table using secretToken since your dashboard updates users.customPrompt
+    const [userRecord] = await db
       .select()
-      .from(messages)
-      .where(eq(messages.slug, slug))
+      .from(users)
+      .where(eq(users.secretToken, token))
       .limit(1);
 
-    if (targetMessage?.promptContent) {
-      dynamicTitle = targetMessage.promptContent;
+    if (userRecord?.customPrompt) {
+      dynamicTitle = userRecord.customPrompt;
     }
   } catch (error) {
-    console.error("Error fetching metadata prompt:", error);
+    console.error("Error fetching metadata custom prompt:", error);
   }
 
   return {
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: dynamicTitle,
       description: dynamicDescription,
-      url: `${siteUrl}/${slug}`,
+      url: `${siteUrl}/${token}`,
       siteName: "KUSO",
       images: [
         {
@@ -52,7 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "website",
     },
     twitter: {
-      card: "summary",
+      card: "summary", // Forces the square image to lock on the left side
       title: dynamicTitle,
       description: dynamicDescription,
       images: [imageUrl],
@@ -61,16 +62,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function SendMessagePage({ params }: PageProps) {
-  const { token: slug } = await params;
+  const { token } = await params;
 
+  // Fetch user data securely by token
   const result = await db
     .select({
-      message: messages,
       user: users,
     })
-    .from(messages)
-    .innerJoin(users, eq(messages.userId, users.id))
-    .where(eq(messages.slug, slug))
+    .from(users)
+    .where(eq(users.secretToken, token))
     .limit(1);
 
   const data = result[0];
@@ -83,7 +83,7 @@ export default async function SendMessagePage({ params }: PageProps) {
     <SendMessageClient 
       username={data.user.username} 
       favoriteColor={data.user.favoriteColor || "pink"} 
-      promptContent={data.message.promptContent}
+      promptContent={data.user.customPrompt || "Anonymous messages!"}
     />
   );
 }
