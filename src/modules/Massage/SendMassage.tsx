@@ -12,9 +12,10 @@ import { toast } from "sonner";
 interface SendMessageClientProps {
   username: string;
   favoriteColor?: string;
+  promptContent?: string; // Added to render your dynamic heading on the card
 }
 
-export function SendMessageClient({ username, favoriteColor }: SendMessageClientProps) {
+export function SendMessageClient({ username, favoriteColor, promptContent }: SendMessageClientProps) {
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -75,7 +76,10 @@ export function SendMessageClient({ username, favoriteColor }: SendMessageClient
                   {username ? username[0].toUpperCase() : "U"}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-zinc-500 lowercase tracking-wider">send me anonymous messages!</span>
+                  {/* Dynamic card subheader showing the custom prompt/heading safely without leaking the full username handle */}
+                  <span className="text-xs font-bold text-zinc-500 lowercase tracking-wider">
+                    {promptContent || "send me anonymous messages!"}
+                  </span>
                 </div>
               </div>
 

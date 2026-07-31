@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { messages, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { SendMessageClient } from "@/modules/Massage/SendMassage";
@@ -12,21 +12,21 @@ interface PageProps {
 const siteUrl = "https://kuso-silk.vercel.app";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { token } = await params;
+  const { token: slug } = await params;
   const imageUrl = `${siteUrl}/opengraph-image.png`;
 
   let dynamicTitle = "Anonymous messages!";
   let dynamicDescription = "Send me an anonymous message!";
 
   try {
-    const [targetUser] = await db
+    const [targetMessage] = await db
       .select()
-      .from(users)
-      .where(eq(users.secretToken, token))
+      .from(messages)
+      .where(eq(messages.slug, slug))
       .limit(1);
 
-    if (targetUser?.customPrompt) {
-      dynamicTitle = targetUser.customPrompt;
+    if (targetMessage?.promptContent) {
+      dynamicTitle = targetMessage.promptContent;
     }
   } catch (error) {
     console.error("Error fetching metadata prompt:", error);
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: dynamicTitle,
       description: dynamicDescription,
-      url: `${siteUrl}/${token}`,
+      url: `${siteUrl}/${slug}`,
       siteName: "KUSO",
       images: [
         {
@@ -61,22 +61,29 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function SendMessagePage({ params }: PageProps) {
-  const { token } = await params;
+  const { token: slug } = await params;
 
-  const [targetUser] = await db
-    .select()
-    .from(users)
-    .where(eq(users.secretToken, token))
+  const result = await db
+    .select({
+      message: messages,
+      user: users,
+    })
+    .from(messages)
+    .innerJoin(users, eq(messages.userId, users.id))
+    .where(eq(messages.slug, slug))
     .limit(1);
 
-  if (!targetUser) {
+  const data = result[0];
+
+  if (!data) {
     notFound();
   }
 
   return (
     <SendMessageClient 
-      username={targetUser.username} 
-      favoriteColor={targetUser.favoriteColor || "pink"} 
+      username={data.user.username} 
+      favoriteColor={data.user.favoriteColor || "pink"} 
+      promptContent={data.message.promptContent}
     />
   );
 }
