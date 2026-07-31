@@ -85,7 +85,9 @@ export function DashboardClient({ token }: DashboardClientProps) {
   };
 
   const handleWhatsAppShare = () => {
-    const text = encodeURIComponent(profileLink);
+    // Send only the clean base profile link so WhatsApp properly loads the OpenGraph preview card
+    const cleanShareLink = `${window.location.origin}/${user.secretToken}`;
+    const text = encodeURIComponent(cleanShareLink);
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
